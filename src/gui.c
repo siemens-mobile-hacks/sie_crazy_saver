@@ -5,6 +5,9 @@
 
 extern unsigned int SS_CSM_ID;
 
+extern int CFG_ENABLE_MP_ILLUMINATION;
+extern int CFG_FONT_SIZE_CLOCK, CFG_FONT_SIZE_TRACK;
+
 RECT canvas = { 0 };
 
 GBSTMR TMR;
@@ -37,7 +40,7 @@ void ChangeColors() {
 }
 
 void Illumination_Proc() {
-    if (IsPlayerOn() && !IsCalling()) {
+    if (CFG_ENABLE_MP_ILLUMINATION && IsPlayerOn() && !IsCalling()) {
         if (TMR_ILLUMINATION.param6 == 0) {
             BacklightOff();
             TMR_ILLUMINATION.param6 = 1;
@@ -59,7 +62,7 @@ void Redraw_Proc() {
 
 void DrawBG(int x, int y, int x2, int y2) {
     unsigned int color_bg_id = 0;
-    if (IsPlayerOn()) {
+    if (CFG_ENABLE_MP_ILLUMINATION && IsPlayerOn()) {
         color_bg_id = COLOR_BG_ID;
     } else {
         color_bg_id = 1;
@@ -71,7 +74,7 @@ void DrawBG(int x, int y, int x2, int y2) {
 
 void OnRedraw(MAIN_GUI *data) {
     DrawBG(0, 0, ScreenW() - 1, ScreenH() - 1);
-    if (IsPlayerOn()) {
+    if (CFG_ENABLE_MP_ILLUMINATION && IsPlayerOn()) {
         // track
         WSHDR *dir_ws = (WSHDR*)GetLastAudioTrackDir();
         WSHDR *filename_ws = (WSHDR*)GetLastAudioTrackFilename();
@@ -91,7 +94,8 @@ void OnRedraw(MAIN_GUI *data) {
                 wstrcpy(ws, filename_ws);
             }
             Sie_FT_DrawText(ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
-                            18,SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
+                            CFG_FONT_SIZE_TRACK,
+                            SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
                             GetPaletteAdrByColorIndex((int)COLOR_TEXT_ID));
             FreeWS(ws);
         }
@@ -103,7 +107,8 @@ void OnRedraw(MAIN_GUI *data) {
         GetDateTime(&date, &time);
         WSHDR *ws = AllocWS(64);
         wsprintf(ws, "%02d:%02d", time.hour, time.min);
-        Sie_FT_DrawBoundingString(ws, 0, 0, ScreenW() - 1, ScreenH() - 1, 52,
+        Sie_FT_DrawBoundingString(ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
+                                  CFG_FONT_SIZE_CLOCK,
                                   SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
                                   GetPaletteAdrByColorIndex((int)COLOR_TEXT_ID));
     }
@@ -151,7 +156,7 @@ static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
             CloseScreensaver();
         }
     } else if (msg->gbsmsg->msg == KEY_UP) {
-        if (!IsPlayerOn()) {
+        if (!CFG_ENABLE_MP_ILLUMINATION || !IsPlayerOn()) {
             BacklightOn();
             GBS_StartTimerProc(&TMR, 216 * 1, BacklightOff);
         }

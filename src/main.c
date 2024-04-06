@@ -2,8 +2,10 @@
 #include <string.h>
 #include <sie/sie.h>
 #include "csm.h"
+#include "config_loader.h"
 
 extern GBSTMR TMR;
+extern char CFG_PATH[];
 extern unsigned int CSM_ID;
 
 unsigned int SS_CSM_ID;
@@ -45,6 +47,11 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
             csm_ss->constr = &new_csmd;
             UnlockSched();
             Sie_SubProc_Run(CreateCrazyCSM, NULL);
+        }
+    } else if (msg->msg == MSG_RECONFIGURE_REQ) {
+        if (strcmpi(CFG_PATH, (char *)msg->data0) == 0) {
+            ShowMSG(1, (int)"SieCrazySaver config updated!");
+            InitConfig();
         }
     }
     return 1;
@@ -95,6 +102,7 @@ int main() {
     CSM_RAM *save_cmpc;
     char dummy[sizeof(MAIN_CSM)];
     UpdateCSMname();
+    InitConfig();
     LockSched();
     save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
     CSM_root()->csm_q->current_msg_processing_csm = CSM_root()->csm_q->csm.first;
