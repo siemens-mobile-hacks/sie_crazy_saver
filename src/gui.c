@@ -22,9 +22,9 @@ unsigned int IsMPOn() {
     return (Sie_CSM_FindByAddr(CFG_MP_CSM_ADDR)) ? 1 : 0;
 }
 
-void BacklightOn() {
-    SetIllumination(ILLUMINATION_DEV_KEYBOARD, 1, 100, 1000);
-    SetIllumination(ILLUMINATION_DEV_DISPLAY, 1, 100, 1000);
+void BacklightOn(unsigned int level) {
+    SetIllumination(ILLUMINATION_DEV_KEYBOARD, 1, level, 1000);
+    SetIllumination(ILLUMINATION_DEV_DISPLAY, 1, level, 1000);
 }
 
 void BacklightOff() {
@@ -51,11 +51,16 @@ void Illumination_Proc() {
             TMR_ILLUMINATION.param6 = 1;
             GBS_StartTimerProc(&TMR, 216 * 1 + 50, ChangeColors);
         } else {
-            BacklightOn();
+            BacklightOn(100);
             TMR_ILLUMINATION.param6 = 0;
         }
     } else {
         COLOR_BG_ID = 1;
+        COLOR_TEXT_ID = 0;
+        if (TMR_ILLUMINATION.param6 == 0) { // была включена подсветка, нужно выключить
+            BacklightOff();
+            TMR_ILLUMINATION.param6 = 1;
+        }
     }
     GBS_StartTimerProc(&TMR_ILLUMINATION, 216 * 2 + 100, Illumination_Proc);
 }
@@ -116,6 +121,7 @@ void OnRedraw(MAIN_GUI *data) {
                                   CFG_FONT_SIZE_CLOCK,
                                   SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
                                   GetPaletteAdrByColorIndex((int)COLOR_TEXT_ID));
+        FreeWS(ws);
     }
 }
 
@@ -156,13 +162,17 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
 static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
     if (msg->gbsmsg->msg == LONG_PRESS) {
         if (msg->gbsmsg->submess == '#') {
+            int level;
+            if (!SettingsAE_Read(&level, SETTINGS_ID_SETUP, NULL, "DISPLAY_ILLUMINATION")) {
+                level = 100;
+            }
             KbdUnlock();
-            BacklightOn();
+            BacklightOn(level);
             CloseScreensaver();
         }
     } else if (msg->gbsmsg->msg == KEY_UP) {
-        if (!CFG_ENABLE_MP_ILLUMINATION || !IsPlayerOn()) {
-            BacklightOn();
+        if (!CFG_ENABLE_MP_ILLUMINATION || !IsMPOn()) {
+            BacklightOn(100);
             GBS_StartTimerProc(&TMR, 216 * 1, BacklightOff);
         }
     }
