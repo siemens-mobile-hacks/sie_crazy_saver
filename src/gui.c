@@ -5,6 +5,7 @@
 
 extern unsigned int SS_CSM_ID;
 
+extern char CFG_MP_CSM_ADDR[];
 extern int CFG_ENABLE_MP_ILLUMINATION;
 extern int CFG_FONT_SIZE_CLOCK, CFG_FONT_SIZE_TRACK;
 
@@ -16,6 +17,10 @@ GBSTMR TMR_ILLUMINATION = { 0 };
 
 unsigned int COLOR_BG_ID;
 unsigned int COLOR_TEXT_ID = 0;
+
+unsigned int IsMPOn() {
+    return (Sie_CSM_FindByAddr(CFG_MP_CSM_ADDR)) ? 1 : 0;
+}
 
 void BacklightOn() {
     SetIllumination(ILLUMINATION_DEV_KEYBOARD, 1, 100, 1000);
@@ -40,7 +45,7 @@ void ChangeColors() {
 }
 
 void Illumination_Proc() {
-    if (CFG_ENABLE_MP_ILLUMINATION && IsPlayerOn() && !IsCalling()) {
+    if (CFG_ENABLE_MP_ILLUMINATION && IsMPOn() && !IsCalling()) {
         if (TMR_ILLUMINATION.param6 == 0) {
             BacklightOff();
             TMR_ILLUMINATION.param6 = 1;
@@ -62,7 +67,7 @@ void Redraw_Proc() {
 
 void DrawBG(int x, int y, int x2, int y2) {
     unsigned int color_bg_id = 0;
-    if (CFG_ENABLE_MP_ILLUMINATION && IsPlayerOn()) {
+    if (CFG_ENABLE_MP_ILLUMINATION && IsMPOn()) {
         color_bg_id = COLOR_BG_ID;
     } else {
         color_bg_id = 1;
@@ -74,7 +79,7 @@ void DrawBG(int x, int y, int x2, int y2) {
 
 void OnRedraw(MAIN_GUI *data) {
     DrawBG(0, 0, ScreenW() - 1, ScreenH() - 1);
-    if (CFG_ENABLE_MP_ILLUMINATION && IsPlayerOn()) {
+    if (CFG_ENABLE_MP_ILLUMINATION && IsMPOn()) {
         // track
         WSHDR *dir_ws = (WSHDR*)GetLastAudioTrackDir();
         WSHDR *filename_ws = (WSHDR*)GetLastAudioTrackFilename();
