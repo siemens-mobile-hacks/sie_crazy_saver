@@ -113,10 +113,14 @@ void OnRedraw(MAIN_GUI *data) {
         FreeWS(file_prop.tag_title_ws);
         FreeWS(file_prop.tag_artist_ws);
     } else {
-        TTime time; TDate date;
+        TDate date; TTime time;
         GetDateTime(&date, &time);
-        WSHDR *ws = AllocWS(64);
-        wsprintf(ws, "%02d:%02d", time.hour, time.min);
+        WSHDR *ws = AllocWS(32);
+        GetTime_ws(ws, &time, 0x223);
+        unsigned int len = wstrlen(ws);
+        if (len > 5) { // cut am, pm
+            wsRemoveChars(ws, 5 + 1, (int)len);
+        }
         Sie_FT_DrawBoundingString(ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
                                   CFG_FONT_SIZE_CLOCK,
                                   SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
