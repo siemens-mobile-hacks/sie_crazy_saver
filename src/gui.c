@@ -7,7 +7,7 @@ extern unsigned int SS_CSM_ID;
 
 extern char CFG_MP_CSM_ADDR[];
 extern int CFG_ENABLE_MP_ILLUMINATION;
-extern int CFG_FONT_SIZE_CLOCK, CFG_FONT_SIZE_TRACK;
+extern int CFG_FONT_SIZE_CLOCK, CFG_FONT_SIZE_TRACK, CFG_FONT_SIZE_CLOCK2;
 
 RECT canvas = { 0 };
 
@@ -82,9 +82,24 @@ void DrawBG(int x, int y, int x2, int y2) {
                   GetPaletteAdrByColorIndex((int)color_bg_id));
 }
 
+WSHDR *GetTime() {
+    TTime time;
+    unsigned int len = 0;
+    WSHDR *ws = AllocWS(32);
+
+    GetDateTime(NULL, &time);
+    GetTime_ws(ws, &time, 0x223);
+    len = wstrlen(ws);
+    if (len > 5) { // cut am, pm
+        wsRemoveChars(ws, 5 + 1, (int)len);
+    }
+    return ws;
+}
+
 void OnRedraw(MAIN_GUI *data) {
+    WSHDR *time_ws = GetTime();
     DrawBG(0, 0, ScreenW() - 1, ScreenH() - 1);
-    if (CFG_ENABLE_MP_ILLUMINATION && IsMPOn()) {
+    if (IsMPOn()) {
         // track
         WSHDR *dir_ws = (WSHDR*)GetLastAudioTrackDir();
         WSHDR *filename_ws = (WSHDR*)GetLastAudioTrackFilename();
@@ -98,35 +113,40 @@ void OnRedraw(MAIN_GUI *data) {
         wsprintf(file_prop.filename, "%w\\%w", dir_ws, filename_ws);
         if (GetFileProp(&file_prop, filename_ws, dir_ws)) {
             WSHDR *ws = AllocWS(256);
+            unsigned int w, h;
+
             if (wstrlen(file_prop.tag_artist_ws) && wstrlen(file_prop.tag_title_ws)) {
                 wsprintf(ws, "%w - %w", file_prop.tag_artist_ws, file_prop.tag_title_ws);
             } else {
                 wstrcpy(ws, filename_ws);
             }
-            Sie_FT_DrawText(ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
+
+            Sie_FT_GetStringSize(time_ws, CFG_FONT_SIZE_CLOCK2, &w, &h);
+            Sie_FT_DrawText(ws, 0, 0, ScreenW() - 1, ScreenH() - 1 - (int)h - 4,
                             CFG_FONT_SIZE_TRACK,
                             SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
                             GetPaletteAdrByColorIndex((int)COLOR_TEXT_ID));
+            Sie_FT_DrawBoundingString(time_ws, 0, ScreenH() - 1 - (int)h, ScreenW() - 1, ScreenH() - 1,
+                                      CFG_FONT_SIZE_CLOCK2, SIE_FT_TEXT_ALIGN_CENTER,
+                                      GetPaletteAdrByColorIndex((int)COLOR_TEXT_ID));
             FreeWS(ws);
+            FreeWS(file_prop.filename);
+            FreeWS(file_prop.tag_title_ws);
+            FreeWS(file_prop.tag_artist_ws);
+        } else {
+            FreeWS(file_prop.filename);
+            FreeWS(file_prop.tag_title_ws);
+            FreeWS(file_prop.tag_artist_ws);
+            goto DRAW_CLOCK;
         }
-        FreeWS(file_prop.filename);
-        FreeWS(file_prop.tag_title_ws);
-        FreeWS(file_prop.tag_artist_ws);
     } else {
-        TDate date; TTime time;
-        GetDateTime(&date, &time);
-        WSHDR *ws = AllocWS(32);
-        GetTime_ws(ws, &time, 0x223);
-        unsigned int len = wstrlen(ws);
-        if (len > 5) { // cut am, pm
-            wsRemoveChars(ws, 5 + 1, (int)len);
-        }
-        Sie_FT_DrawBoundingString(ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
+        DRAW_CLOCK:
+        Sie_FT_DrawBoundingString(time_ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
                                   CFG_FONT_SIZE_CLOCK,
                                   SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
                                   GetPaletteAdrByColorIndex((int)COLOR_TEXT_ID));
-        FreeWS(ws);
     }
+    FreeWS(time_ws);
 }
 
 static void OnCreate(MAIN_GUI *data, void *(*malloc_adr)(int)) {

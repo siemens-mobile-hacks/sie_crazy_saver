@@ -33,4 +33,13 @@ __root CFG_HDR cfghdr_3 = {CFG_UINT, "Font size track", 0, 100};
     #endif
 #endif
 
+__root CFG_HDR cfghdr_4 = {CFG_UINT, "Font size clock 2", 0, 100};
+#ifdef NEWSGOLD
+    #ifdef ELKA
+        __root unsigned int CFG_FONT_SIZE_CLOCK2 = 32;
+    #else
+        __root unsigned int CFG_FONT_SIZE_CLOCK2 = 22;
+    #endif
+#endif
+
 __CFG_END(0)
