@@ -4,11 +4,14 @@
 #include "csm.h"
 #include "config_loader.h"
 
+#define ELF_NAME "SieCrazySaver"
+
 extern GBSTMR TMR;
 extern char CFG_PATH[];
 extern unsigned int CSM_ID;
 
 unsigned int SS_CSM_ID;
+unsigned int DAEMON_CSM_ID;
 const int minus11 =- 11;
 unsigned short maincsm_name_body[140];
 
@@ -55,6 +58,14 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
             ShowMSG(1, (int)"SieCrazySaver config updated!");
             InitConfig();
         }
+    } else if (msg->msg == MSG_IPC) {
+        IPC_REQ *ipc = (IPC_REQ*)msg->data0;
+        if (strcmpi(ipc->name_to, ELF_NAME) == 0) {
+            int csm_id = (int)ipc->data;
+            if (csm_id != DAEMON_CSM_ID) {
+                CloseCSM(csm_id);
+            }
+        }
     }
     return 1;
 }
@@ -100,7 +111,7 @@ static const struct {
 };
 
 static void UpdateCSMname(void) {
-    wsprintf((WSHDR *)(&MAINCSM.maincsm_name),"SieCrazySaver");
+    wsprintf((WSHDR *)(&MAINCSM.maincsm_name), ELF_NAME);
 }
 
 int main() {
@@ -111,8 +122,14 @@ int main() {
     LockSched();
     save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
     CSM_root()->csm_q->current_msg_processing_csm = CSM_root()->csm_q->csm.first;
-    CreateCSM(&MAINCSM.maincsm,dummy,0);
+    DAEMON_CSM_ID = CreateCSM(&MAINCSM.maincsm,dummy,0);
     CSM_root()->csm_q->current_msg_processing_csm = save_cmpc;
     UnlockSched();
+    // check double run
+    static IPC_REQ ipc;
+    ipc.name_to = ELF_NAME;
+    ipc.name_from = ELF_NAME;
+    ipc.data = (void*)DAEMON_CSM_ID;
+    GBS_SendMessage(MMI_CEPID, MSG_IPC, 0, &ipc);
     return 0;
 }
