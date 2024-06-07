@@ -30,6 +30,7 @@ typedef struct {
 void ss_csm_onclose(CSM_RAM *csm) {
     CloseCSM((int)CSM_ID);
     old_onclose(csm);
+    old_csmd = NULL;
 }
 
 static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
@@ -63,7 +64,9 @@ static void maincsm_oncreate(CSM_RAM *data) {
 
 static void maincsm_onclose(CSM_RAM *data) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
-    csm->csm_ss->constr = old_csmd;
+    if (old_csmd) {
+        csm->csm_ss->constr = old_csmd;
+    }
     CloseCSM((int)CSM_ID);
     SUBPROC((void *)kill_elf);
 }

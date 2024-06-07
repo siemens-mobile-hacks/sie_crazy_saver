@@ -110,7 +110,12 @@ void OnRedraw(MAIN_GUI *data) {
         file_prop.tag_title_ws = AllocWS(64);
         file_prop.tag_artist_ws = AllocWS(64);
 
-        wsprintf(file_prop.filename, "%w\\%w", dir_ws, filename_ws);
+        wstrcpy(file_prop.filename, dir_ws);
+        if (wsCharAt(file_prop.filename, (short)wstrlen(file_prop.filename)) != '\\') {
+            wsAppendChar(file_prop.filename, '\\');
+        }
+        wstrcat(file_prop.filename, filename_ws);
+
         if (GetFileProp(&file_prop, filename_ws, dir_ws)) {
             WSHDR *ws = AllocWS(256);
             unsigned int w, h;
@@ -158,6 +163,9 @@ static void OnCreate(MAIN_GUI *data, void *(*malloc_adr)(int)) {
 
 static void OnClose(MAIN_GUI *data, void (*mfree_adr)(void *)) {
     data->gui.state = 0;
+    GBS_DelTimer(&TMR);
+    GBS_DelTimer(&TMR_REDRAW);
+    GBS_DelTimer(&TMR_ILLUMINATION);
     CloseCSM((int)SS_CSM_ID);
 }
 

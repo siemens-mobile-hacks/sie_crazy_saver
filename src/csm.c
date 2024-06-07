@@ -18,7 +18,7 @@ static void maincsm_oncreate(CSM_RAM *data) {
     csm->main_gui = CreateCrazyGUI();
 }
 
-static void maincsm_onclose(CSM_RAM *csm) {
+static void maincsm_onclose(CSM_RAM *data) {
     CloseScreensaver();
     CSM_ID = 0;
 }
