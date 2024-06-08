@@ -2,12 +2,16 @@
 #include <stdlib.h>
 #include <sie/sie.h>
 #include "gui.h"
-
-extern unsigned int SS_CSM_ID;
+#include "backlight.h"
 
 extern char CFG_MP_CSM_ADDR[];
 extern int CFG_ENABLE_MP_ILLUMINATION;
 extern int CFG_FONT_SIZE_CLOCK, CFG_FONT_SIZE_TRACK, CFG_FONT_SIZE_CLOCK2;
+
+extern unsigned int SS_CSM_ID;
+
+unsigned int GUI_ID;
+unsigned int CODE_PROTECTION_CSM_ID;
 
 RECT canvas = { 0 };
 
@@ -22,14 +26,10 @@ unsigned int IsMPOn() {
     return (Sie_CSM_FindByAddr(CFG_MP_CSM_ADDR)) ? 1 : 0;
 }
 
-void BacklightOn(unsigned int level) {
-    SetIllumination(ILLUMINATION_DEV_KEYBOARD, 1, level, 1000);
-    SetIllumination(ILLUMINATION_DEV_DISPLAY, 1, level, 1000);
-}
-
-void BacklightOff() {
-    SetIllumination(ILLUMINATION_DEV_KEYBOARD, 1, 0, 1000);
-    SetIllumination(ILLUMINATION_DEV_DISPLAY, 1, 0, 1000);
+unsigned int IsCodeProtection() {
+    int flag = 0;
+    SettingsAE_GetFlag(&flag, SETTINGS_ID_APIDC_SETUP, "Screensaver", "CodeProtection");
+    return flag;
 }
 
 void ChangeColors() {
@@ -162,15 +162,18 @@ static void OnCreate(MAIN_GUI *data, void *(*malloc_adr)(int)) {
 }
 
 static void OnClose(MAIN_GUI *data, void (*mfree_adr)(void *)) {
+    GUI_ID = 0;
     data->gui.state = 0;
     GBS_DelTimer(&TMR);
     GBS_DelTimer(&TMR_REDRAW);
     GBS_DelTimer(&TMR_ILLUMINATION);
     CloseCSM((int)SS_CSM_ID);
+    BacklightOnDefault();
 }
 
 void OnFocus(MAIN_GUI *data, void *(*malloc_adr)(int), void (*mfree_adr)(void *)) {
     data->gui.state = 2;
+    KbdLock();
     DisableIDLETMR();
 #ifdef ELKA
     DisableIconBar(1);
@@ -190,17 +193,16 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
     GBS_DelTimer(&TMR_ILLUMINATION);
 }
 
-
 static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
     if (msg->gbsmsg->msg == LONG_PRESS) {
         if (msg->gbsmsg->submess == '#') {
-            int level;
-            if (!SettingsAE_Read(&level, SETTINGS_ID_SETUP, NULL, "DISPLAY_ILLUMINATION")) {
-                level = 100;
+            if (IsCodeProtection()) {
+//                *((char*)GetScreenSaverRAM() + 0x38) = -1; // bypass default code protection
+                CODE_PROTECTION_CSM_ID = ShowScreenSaverCodeProtection();
+            } else {
+                KbdUnlock();
+                CloseScreensaver();
             }
-            KbdUnlock();
-            BacklightOn(level);
-            CloseScreensaver();
         }
     } else if (msg->gbsmsg->msg == KEY_UP) {
         if (!CFG_ENABLE_MP_ILLUMINATION || !IsMPOn()) {
@@ -235,6 +237,6 @@ MAIN_GUI *CreateCrazyGUI() {
     main_gui->gui.canvas = (RECT*)(&canvas);
     main_gui->gui.methods = (void*)gui_methods;
     main_gui->gui.item_ll.data_mfree = (void (*)(void *))mfree_adr();
-    main_gui->gui_id = CreateGUI(main_gui);
+    GUI_ID = CreateGUI(main_gui);
     return main_gui;
 }

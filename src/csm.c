@@ -1,5 +1,9 @@
 #include <swilib.h>
 #include "gui.h"
+#include "backlight.h"
+
+extern unsigned int GUI_ID;
+extern unsigned int CODE_PROTECTION_CSM_ID;
 
 unsigned int CSM_ID;
 
@@ -11,22 +15,38 @@ typedef struct {
     MAIN_GUI *main_gui;
 } MAIN_CSM;
 
+int KeyHook(int submess, int msg) {
+    if (msg == KEY_UP) { // fix backlight in code protection gui
+        if (!IsUnlocked() && !IsGuiOnTop((int)GUI_ID)) {
+            BacklightOnDefault();
+        }
+    }
+    return KEYHOOK_NEXT;
+}
+
 static void maincsm_oncreate(CSM_RAM *data) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
     csm->csm.state = 0;
     csm->csm.unk1 = 0;
     csm->main_gui = CreateCrazyGUI();
+    AddKeybMsgHook(KeyHook);
 }
 
 static void maincsm_onclose(CSM_RAM *data) {
     CloseScreensaver();
+    RemoveKeybMsgHook(KeyHook);
     CSM_ID = 0;
 }
 
 static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
-    if ((msg->msg == MSG_GUI_DESTROYED) && ((int)msg->data0 == (int)csm->main_gui->gui_id)) {
+    if ((msg->msg == MSG_GUI_DESTROYED) && ((int)msg->data0 == GUI_ID)) {
         csm->csm.state = -3;
+    } else if (msg->msg == MSG_CSM_DESTROYED) {
+        if ((int)msg->data0 == CODE_PROTECTION_CSM_ID && (int)msg->data1 == 3) {
+            KbdUnlock();
+            csm->csm.state = -3;
+        }
     }
     return 1;
 }

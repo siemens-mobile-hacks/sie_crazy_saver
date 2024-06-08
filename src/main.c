@@ -6,12 +6,12 @@
 
 #define ELF_NAME "SieCrazySaver"
 
-extern GBSTMR TMR;
 extern char CFG_PATH[];
 extern unsigned int CSM_ID;
 
 unsigned int SS_CSM_ID;
 unsigned int DAEMON_CSM_ID;
+
 const int minus11 =- 11;
 unsigned short maincsm_name_body[140];
 
