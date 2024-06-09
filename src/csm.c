@@ -18,7 +18,7 @@ typedef struct {
 int KeyHook(int submess, int msg) {
     if (msg == KEY_UP) { // fix backlight in code protection gui
         if (!IsUnlocked() && !IsGuiOnTop((int)GUI_ID)) {
-            BacklightOnDefault();
+            BacklightOn(-1);
         }
     }
     return KEYHOOK_NEXT;

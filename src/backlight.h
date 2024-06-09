@@ -1,5 +1,4 @@
 #pragma once
 
-void BacklightOn(unsigned int level);
+void BacklightOn(int level);
 void BacklightOff();
-void BacklightOnDefault();
