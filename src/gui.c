@@ -15,10 +15,6 @@ unsigned int CODE_PROTECTION_CSM_ID;
 
 RECT canvas = { 0 };
 
-GBSTMR TMR;
-GBSTMR TMR_REDRAW;
-GBSTMR TMR_ILLUMINATION = { 0 };
-
 unsigned int COLOR_BG_ID;
 unsigned int COLOR_TEXT_ID = 0;
 
@@ -44,30 +40,38 @@ void ChangeColors() {
     }
 }
 
-void Illumination_Proc() {
+void Illumination_Proc(void *gui) {
+    MAIN_GUI *data = (MAIN_GUI*)gui;
     if (CFG_ENABLE_MP_ILLUMINATION && IsMPOn() && !IsCalling()) {
-        if (TMR_ILLUMINATION.param6 == 0) {
+        if (data->illumination_flag == 0) {
             BacklightOff();
-            TMR_ILLUMINATION.param6 = 1;
-            GBS_StartTimerProc(&TMR, 216 * 1 + 50, ChangeColors);
+            data->illumination_flag = 1;
+            GUI_StartTimerProc(data, data->timer_id, 1000, ChangeColors);
         } else {
             BacklightOn(100);
-            TMR_ILLUMINATION.param6 = 0;
+            data->illumination_flag = 0;
         }
     } else {
         COLOR_BG_ID = 1;
         COLOR_TEXT_ID = 0;
-        if (TMR_ILLUMINATION.param6 == 0) { // была включена подсветка, нужно выключить
+        if (data->illumination_flag == 0) { // была включена подсветка, нужно выключить
             BacklightOff();
-            TMR_ILLUMINATION.param6 = 1;
+            data->illumination_flag = 1;
         }
     }
-    GBS_StartTimerProc(&TMR_ILLUMINATION, 216 * 2 + 100, Illumination_Proc);
+    GUI_StartTimerProc(data, data->illumination_timer_id, 2000, Illumination_Proc);
 }
 
-void Redraw_Proc() {
+void Redraw_Proc(void *gui) {
+    MAIN_GUI *data = (MAIN_GUI*)gui;
     DirectRedrawGUI();
-    GBS_StartTimerProc(&TMR_REDRAW, 216, Redraw_Proc);
+    GUI_StartTimerProc(data, data->redraw_timer_id, 1000, Redraw_Proc);
+}
+
+void DeleteTimers(MAIN_GUI *data) {
+    GUI_DeleteTimer(data, data->timer_id);
+    GUI_DeleteTimer(data, data->redraw_timer_id);
+    GUI_DeleteTimer(data, data->illumination_timer_id);
 }
 
 void DrawBG(int x, int y, int x2, int y2) {
@@ -164,22 +168,23 @@ static void OnCreate(MAIN_GUI *data, void *(*malloc_adr)(int)) {
 static void OnClose(MAIN_GUI *data, void (*mfree_adr)(void *)) {
     GUI_ID = 0;
     data->gui.state = 0;
-    GBS_DelTimer(&TMR);
-    GBS_DelTimer(&TMR_REDRAW);
-    GBS_DelTimer(&TMR_ILLUMINATION);
+    DeleteTimers(data);
     CloseCSM((int)SS_CSM_ID);
     BacklightOnDefault();
 }
 
 void OnFocus(MAIN_GUI *data, void *(*malloc_adr)(int), void (*mfree_adr)(void *)) {
     data->gui.state = 2;
-    KbdLock();
     DisableIDLETMR();
 #ifdef ELKA
     DisableIconBar(1);
 #endif
-    Redraw_Proc();
-    GBS_StartTimerProc(&TMR_ILLUMINATION, 216 * 2, Illumination_Proc);
+    data->timer_id = GUI_NewTimer(data);
+    data->redraw_timer_id = GUI_NewTimer(data);
+    GUI_StartTimerProc(data, data->redraw_timer_id, 1000, Redraw_Proc);
+    data->illumination_timer_id = GUI_NewTimer(data);
+    GUI_StartTimerProc(data, data->illumination_timer_id, 1000, Illumination_Proc);
+
 }
 
 static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
@@ -188,9 +193,7 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
 #ifdef ELKA
     DisableIconBar(0);
 #endif
-    GBS_DelTimer(&TMR);
-    GBS_DelTimer(&TMR_REDRAW);
-    GBS_DelTimer(&TMR_ILLUMINATION);
+    DeleteTimers(data);
     if (IsUnlocked()) {
         Sie_GUI_CloseGUI(GUI_ID);
     }
@@ -213,7 +216,7 @@ static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
     } else if (msg->gbsmsg->msg == KEY_UP) {
         if (!CFG_ENABLE_MP_ILLUMINATION || !IsMPOn()) {
             BacklightOn(100);
-            GBS_StartTimerProc(&TMR, 216 * 1, BacklightOff);
+            GUI_StartTimerProc(data, data->timer_id, 1000, BacklightOff);
         }
     }
     return 0;
