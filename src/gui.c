@@ -191,14 +191,20 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
     GBS_DelTimer(&TMR);
     GBS_DelTimer(&TMR_REDRAW);
     GBS_DelTimer(&TMR_ILLUMINATION);
+    if (IsUnlocked()) {
+        Sie_GUI_CloseGUI(GUI_ID);
+    }
 }
 
 static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
     if (msg->gbsmsg->msg == LONG_PRESS) {
         if (msg->gbsmsg->submess == '#') {
             if (IsCodeProtection()) {
-//                *((char*)GetScreenSaverRAM() + 0x38) = -1; // bypass default code protection
-                CODE_PROTECTION_CSM_ID = ShowScreenSaverCodeProtection();
+                if (!IsUnlocked()) {
+                    CODE_PROTECTION_CSM_ID = ShowScreenSaverCodeProtection();
+                } else {
+                    return 1;
+                }
             } else {
                 KbdUnlock();
                 CloseScreensaver();
