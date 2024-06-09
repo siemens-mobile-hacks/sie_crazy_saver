@@ -43,29 +43,29 @@ void ChangeColors() {
 void Illumination_Proc(void *gui) {
     MAIN_GUI *data = (MAIN_GUI*)gui;
     if (CFG_ENABLE_MP_ILLUMINATION && IsMPOn() && !IsCalling()) {
-        if (data->illumination_flag == 0) {
+        if (data->illumination_flag == 1) {
             BacklightOff();
-            data->illumination_flag = 1;
-            GUI_StartTimerProc(data, data->timer_id, 1000, ChangeColors);
+            data->illumination_flag = 0;
+            GUI_StartTimerProc(data, data->timer_id, 1050, ChangeColors);
         } else {
             BacklightOn(100);
-            data->illumination_flag = 0;
+            data->illumination_flag = 1;
         }
     } else {
         COLOR_BG_ID = 1;
         COLOR_TEXT_ID = 0;
-        if (data->illumination_flag == 0) { // была включена подсветка, нужно выключить
+        if (data->illumination_flag == 1) { // была включена подсветка, нужно выключить
             BacklightOff();
-            data->illumination_flag = 1;
+            data->illumination_flag = 0;
         }
     }
-    GUI_StartTimerProc(data, data->illumination_timer_id, 2000, Illumination_Proc);
+    GUI_StartTimerProc(data, data->illumination_timer_id, 1200 * 2, Illumination_Proc);
 }
 
 void Redraw_Proc(void *gui) {
     MAIN_GUI *data = (MAIN_GUI*)gui;
     DirectRedrawGUI();
-    GUI_StartTimerProc(data, data->redraw_timer_id, 1000, Redraw_Proc);
+    GUI_StartTimerProc(data, data->redraw_timer_id, 1050, Redraw_Proc);
 }
 
 void DeleteTimers(MAIN_GUI *data) {
@@ -163,6 +163,10 @@ static void OnCreate(MAIN_GUI *data, void *(*malloc_adr)(int)) {
     COLOR_BG_ID = 1;
     COLOR_TEXT_ID = 0;
     BacklightOff();
+    data->timer_id = GUI_NewTimer(data);
+    data->redraw_timer_id = GUI_NewTimer(data);
+    data->illumination_timer_id = GUI_NewTimer(data);
+    GUI_StartTimerProc(data, data->timer_id, 1050, ChangeColors);
 }
 
 static void OnClose(MAIN_GUI *data, void (*mfree_adr)(void *)) {
@@ -175,15 +179,13 @@ static void OnClose(MAIN_GUI *data, void (*mfree_adr)(void *)) {
 
 void OnFocus(MAIN_GUI *data, void *(*malloc_adr)(int), void (*mfree_adr)(void *)) {
     data->gui.state = 2;
+    data->illumination_flag = 0;
     DisableIDLETMR();
 #ifdef ELKA
     DisableIconBar(1);
 #endif
-    data->timer_id = GUI_NewTimer(data);
-    data->redraw_timer_id = GUI_NewTimer(data);
-    GUI_StartTimerProc(data, data->redraw_timer_id, 1000, Redraw_Proc);
-    data->illumination_timer_id = GUI_NewTimer(data);
-    GUI_StartTimerProc(data, data->illumination_timer_id, 1000, Illumination_Proc);
+    GUI_StartTimerProc(data, data->redraw_timer_id, 1050, Redraw_Proc);
+    GUI_StartTimerProc(data, data->illumination_timer_id, 1200 * 2, Illumination_Proc);
 
 }
 
@@ -195,7 +197,7 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
 #endif
     DeleteTimers(data);
     if (IsUnlocked()) {
-        Sie_GUI_CloseGUI(GUI_ID);
+        CloseScreensaver();
     }
 }
 
@@ -206,7 +208,7 @@ static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
                 if (!IsUnlocked()) {
                     CODE_PROTECTION_CSM_ID = ShowScreenSaverCodeProtection();
                 } else {
-                    return 1;
+                    CloseScreensaver();
                 }
             } else {
                 KbdUnlock();
@@ -216,7 +218,7 @@ static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
     } else if (msg->gbsmsg->msg == KEY_UP) {
         if (!CFG_ENABLE_MP_ILLUMINATION || !IsMPOn()) {
             BacklightOn(100);
-            GUI_StartTimerProc(data, data->timer_id, 1000, BacklightOff);
+            GUI_StartTimerProc(data, data->timer_id, 1100, BacklightOff);
         }
     }
     return 0;
