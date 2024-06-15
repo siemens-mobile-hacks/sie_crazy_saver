@@ -38,7 +38,7 @@ void ss_csm_onclose(CSM_RAM *csm) {
 
 static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
-    if (msg->msg == 0xA000) {
+    if (msg->msg == 0xA000 && GetScreenSaverType() == SCREENSAVER_ENERGY_SAVER) {
         SS_CSM_ID = msg->submess;
         csm->csm_ss = FindCSMbyID((int)SS_CSM_ID);
         if (csm->csm_ss) {
