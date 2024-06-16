@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sie/sie.h>
 #include "csm.h"
+#include "gui.h"
 #include "config_loader.h"
 
 #define ELF_NAME "SieCrazySaver"
@@ -38,21 +39,25 @@ void ss_csm_onclose(CSM_RAM *csm) {
 
 static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
-    if (msg->msg == 0xA000 && GetScreenSaverType() == SCREENSAVER_ENERGY_SAVER) {
-        SS_CSM_ID = msg->submess;
-        csm->csm_ss = FindCSMbyID((int)SS_CSM_ID);
-        if (csm->csm_ss) {
-            LockSched();
-            old_csmd = csm->csm_ss->constr;
+    if (msg->msg == 0xA000) {
+        if (GetScreenSaverType() == SCREENSAVER_ENERGY_SAVER) {
+            SS_CSM_ID = msg->submess;
+            csm->csm_ss = FindCSMbyID((int)SS_CSM_ID);
+            if (csm->csm_ss) {
+                LockSched();
+                old_csmd = csm->csm_ss->constr;
 //            old_onmessage = csm_ss->constr->onMessage;
-            old_onclose = csm->csm_ss->constr->onClose;
-            memcpy(&new_csmd, old_csmd, sizeof(CSM_DESC));
+                old_onclose = csm->csm_ss->constr->onClose;
+                memcpy(&new_csmd, old_csmd, sizeof(CSM_DESC));
 //            new_csmd.onMessage = ss_csm_onmessage;
-            new_csmd.onClose = ss_csm_onclose;
-            csm->csm_ss->constr = &new_csmd;
-            UnlockSched();
-            Sie_SubProc_Run(CreateCrazyCSM, NULL);
+                new_csmd.onClose = ss_csm_onclose;
+                csm->csm_ss->constr = &new_csmd;
+                UnlockSched();
+                Sie_SubProc_Run(CreateCrazyCSM, NULL);
+            }
         }
+    } else if (msg->msg == 0xA001) { // preview
+        Sie_SubProc_Run(CreateCrazyGUI, (void*)1);
     } else if (msg->msg == MSG_RECONFIGURE_REQ) {
         if (strcmpi(CFG_PATH, (char *)msg->data0) == 0) {
             ShowMSG(1, (int)"SieCrazySaver config updated!");

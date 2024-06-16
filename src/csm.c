@@ -28,7 +28,7 @@ static void maincsm_oncreate(CSM_RAM *data) {
     MAIN_CSM *csm = (MAIN_CSM*)data;
     csm->csm.state = 0;
     csm->csm.unk1 = 0;
-    csm->main_gui = CreateCrazyGUI();
+    csm->main_gui = CreateCrazyGUI(0);
     AddKeybMsgHook(KeyHook);
 }
 

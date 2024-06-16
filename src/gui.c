@@ -145,7 +145,9 @@ void OnFocus(MAIN_GUI *data, void *(*malloc_adr)(int), void (*mfree_adr)(void *)
 #ifdef ELKA
     DisableIconBar(1);
 #endif
-    BacklightOff();
+    if (!data->preview) {
+        BacklightOff();
+    }
     data->redraw_timer_id = GUI_NewTimer(data);
     GUI_StartTimerProc(data, data->redraw_timer_id, 1050, Redraw_Proc);
 }
@@ -157,28 +159,36 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
     DisableIconBar(0);
 #endif
     GUI_DeleteTimer(data, data->redraw_timer_id);
-    if (IsUnlocked()) {
-        CloseScreensaver();
+    if (!data->preview) {
+        if (IsUnlocked()) {
+            CloseScreensaver();
+        }
+    } else {
+        GeneralFuncF1(1);
     }
 }
 
 static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
-    if (msg->gbsmsg->msg == LONG_PRESS) {
-        if (msg->gbsmsg->submess == '#') {
-            if (IsCodeProtection()) {
-                if (!IsUnlocked()) {
-                    CODE_PROTECTION_CSM_ID = ShowScreenSaverCodeProtection();
+    if (!data->preview) {
+        if (msg->gbsmsg->msg == LONG_PRESS) {
+            if (msg->gbsmsg->submess == '#') {
+                if (IsCodeProtection()) {
+                    if (!IsUnlocked()) {
+                        CODE_PROTECTION_CSM_ID = ShowScreenSaverCodeProtection();
+                    } else {
+                        CloseScreensaver();
+                    }
                 } else {
+                    KbdUnlock();
                     CloseScreensaver();
                 }
-            } else {
-                KbdUnlock();
-                CloseScreensaver();
             }
+        } else if (msg->gbsmsg->msg == KEY_UP) {
+            BacklightOn(100);
+            GUI_StartTimerProc(data, data->timer_id, 1000, BacklightOff);
         }
-    } else if (msg->gbsmsg->msg == KEY_UP) {
-        BacklightOn(100);
-        GUI_StartTimerProc(data, data->timer_id, 1000, BacklightOff);
+    } else {
+        return 1;
     }
     return 0;
 }
@@ -200,13 +210,14 @@ const void *const gui_methods[11] = {
         0
 };
 
-MAIN_GUI *CreateCrazyGUI() {
+MAIN_GUI *CreateCrazyGUI(int preview) {
     MAIN_GUI *main_gui = malloc(sizeof(MAIN_GUI));
     zeromem(main_gui, sizeof(MAIN_GUI));
     Sie_GUI_InitCanvas(&canvas);
     main_gui->gui.canvas = (RECT*)(&canvas);
     main_gui->gui.methods = (void*)gui_methods;
     main_gui->gui.item_ll.data_mfree = (void (*)(void *))mfree_adr();
+    main_gui->preview = preview;
     GUI_ID = CreateGUI(main_gui);
     return main_gui;
 }
