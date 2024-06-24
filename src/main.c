@@ -60,8 +60,8 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
         Sie_SubProc_Run(CreateCrazyGUI, (void*)1);
     } else if (msg->msg == MSG_RECONFIGURE_REQ) {
         if (strcmpi(CFG_PATH, (char *)msg->data0) == 0) {
-            ShowMSG(1, (int)"SieCrazySaver config updated!");
             InitConfig();
+            ShowMSG(1, (int)"SieCrazySaver config updated!");
         }
     } else if (msg->msg == MSG_IPC) {
         IPC_REQ *ipc = (IPC_REQ*)msg->data0;

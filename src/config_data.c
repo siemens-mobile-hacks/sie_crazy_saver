@@ -11,8 +11,10 @@ __root CFG_HDR cfghdr_0 = {CFG_STR_WIN1251, "MP CSM addr", 1, 8};
     #endif
 #endif
 
+__root CFG_HDR cfghdr_1 = {CFG_CHECKBOX, "Enable MP illumination", 0, 2};
+__root int CFG_ENABLE_ILLUMINATION = 1;
 
-__root CFG_HDR cfghdr_1 = {CFG_UINT, "Font size clock", 0, 100};
+__root CFG_HDR cfghdr_2 = {CFG_UINT, "Font size clock", 0, 100};
 #ifdef NEWSGOLD
     #ifdef ELKA
         __root unsigned int CFG_FONT_SIZE_CLOCK = 100;
@@ -21,7 +23,7 @@ __root CFG_HDR cfghdr_1 = {CFG_UINT, "Font size clock", 0, 100};
     #endif
 #endif
 
-__root CFG_HDR cfghdr_2 = {CFG_UINT, "Font size track", 0, 100};
+__root CFG_HDR cfghdr_3 = {CFG_UINT, "Font size track", 0, 100};
 #ifdef NEWSGOLD
     #ifdef ELKA
         __root unsigned int CFG_FONT_SIZE_TRACK = 28;
@@ -30,7 +32,7 @@ __root CFG_HDR cfghdr_2 = {CFG_UINT, "Font size track", 0, 100};
     #endif
 #endif
 
-__root CFG_HDR cfghdr_3 = {CFG_UINT, "Font size clock 2", 0, 100};
+__root CFG_HDR cfghdr_4 = {CFG_UINT, "Font size clock 2", 0, 100};
 #ifdef NEWSGOLD
     #ifdef ELKA
         __root unsigned int CFG_FONT_SIZE_CLOCK2 = 32;

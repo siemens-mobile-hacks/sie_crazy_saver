@@ -6,6 +6,9 @@ typedef struct {
 
     int timer_id;
     int redraw_timer_id;
+    int illumination_timer_id;
+    int illumination_flag;
+
     int color_bg_id;
     int color_text_id;
 } MAIN_GUI;

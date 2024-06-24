@@ -1,6 +1,5 @@
 #include <swilib.h>
 #include "gui.h"
-#include "backlight.h"
 
 extern unsigned int GUI_ID;
 extern unsigned int CODE_PROTECTION_CSM_ID;
@@ -18,7 +17,7 @@ typedef struct {
 int KeyHook(int submess, int msg) {
     if (msg == KEY_UP) { // fix backlight in code protection gui
         if (!IsUnlocked() && !IsGuiOnTop((int)GUI_ID)) {
-            BacklightOn(-1);
+            IllumFilterSet(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 1);
         }
     }
     return KEYHOOK_NEXT;

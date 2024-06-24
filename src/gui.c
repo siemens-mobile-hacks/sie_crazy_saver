@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <sie/sie.h>
 #include "gui.h"
-#include "backlight.h"
 
 extern char CFG_MP_CSM_ADDR[];
+extern int CFG_ENABLE_ILLUMINATION;
 extern int CFG_FONT_SIZE_CLOCK, CFG_FONT_SIZE_TRACK, CFG_FONT_SIZE_CLOCK2;
 
 extern unsigned int SS_CSM_ID;
@@ -35,17 +35,31 @@ void ChangeColors(void *gui) {
     } else {
         data->color_text_id = 1;
     }
+    DirectRedrawGUI_ID((int)GUI_ID);
+}
+
+void IlluminationProc(void *gui) {
+    MAIN_GUI *data = (MAIN_GUI*)gui;
+    if (IsMPOn() && CFG_ENABLE_ILLUMINATION) {
+        if (data->illumination_flag == 0) {
+            TempLightOn(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 0x7FFF);
+            data->illumination_flag = 1;
+        } else {
+            IllumFilterSet(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 1);
+            data->illumination_flag = 0;
+            GUI_StartTimerProc(gui, data->timer_id, 1000, ChangeColors);
+        }
+    }
+    GUI_StartTimerProc(gui, data->illumination_timer_id, 2000, IlluminationProc);
 }
 
 void Redraw_Proc(void *gui) {
     MAIN_GUI *data = (MAIN_GUI*)gui;
-    if (IsMPOn()) {
-        ChangeColors(data);
-    } else {
+    if (!IsMPOn() || !CFG_ENABLE_ILLUMINATION) {
         data->color_bg_id = 1;
         data->color_text_id = 0;
+        DirectRedrawGUI_ID((int)GUI_ID);
     }
-    DirectRedrawGUI_ID((int)GUI_ID);
     GUI_StartTimerProc(data, data->redraw_timer_id, 1000, Redraw_Proc);
 }
 
@@ -125,18 +139,17 @@ void OnRedraw(MAIN_GUI *data) {
 
 static void OnCreate(MAIN_GUI *data, void *(*malloc_adr)(int)) {
     data->gui.state = 1;
-    data->timer_id = GUI_NewTimer(data);
     data->color_bg_id = 1;
-    GUI_StartTimerProc(data, data->timer_id, 1050, ChangeColors);
 }
 
 static void OnClose(MAIN_GUI *data, void (*mfree_adr)(void *)) {
     GUI_ID = 0;
     data->gui.state = 0;
     CloseCSM((int)SS_CSM_ID);
-    BacklightOn(-1);
+    TempLightOn(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 0x7FFF);
     GUI_DeleteTimer(data, data->timer_id);
     GUI_DeleteTimer(data, data->redraw_timer_id);
+    GUI_DeleteTimer(data, data->illumination_timer_id);
 }
 
 void OnFocus(MAIN_GUI *data, void *(*malloc_adr)(int), void (*mfree_adr)(void *)) {
@@ -145,11 +158,20 @@ void OnFocus(MAIN_GUI *data, void *(*malloc_adr)(int), void (*mfree_adr)(void *)
 #ifdef ELKA
     DisableIconBar(1);
 #endif
-    if (!data->preview) {
-        BacklightOff();
-    }
+    data->timer_id = GUI_NewTimer(data);
     data->redraw_timer_id = GUI_NewTimer(data);
-    GUI_StartTimerProc(data, data->redraw_timer_id, 1050, Redraw_Proc);
+    data->illumination_timer_id = GUI_NewTimer(data);
+    if (IsMPOn() && CFG_ENABLE_ILLUMINATION) {
+        GUI_StartTimerProc(data, data->timer_id, 1000, ChangeColors);
+    } else {
+        data->color_bg_id = 1;
+        data->color_text_id = 0;
+    }
+    if (!data->preview || (IsMPOn() && CFG_ENABLE_ILLUMINATION)) {
+        IllumFilterSet(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 1);
+    }
+    GUI_StartTimerProc(data, data->redraw_timer_id, 1000, Redraw_Proc);
+    GUI_StartTimerProc(data, data->illumination_timer_id, 1000, IlluminationProc);
 }
 
 static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
@@ -158,7 +180,9 @@ static void OnUnFocus(MAIN_GUI *data, void (*mfree_adr)(void *)) {
 #ifdef ELKA
     DisableIconBar(0);
 #endif
+    GUI_DeleteTimer(data, data->timer_id);
     GUI_DeleteTimer(data, data->redraw_timer_id);
+    GUI_DeleteTimer(data, data->illumination_timer_id);
     if (!data->preview) {
         if (IsUnlocked()) {
             CloseScreensaver();
@@ -184,8 +208,9 @@ static int OnKey(MAIN_GUI *data, GUI_MSG *msg) {
                 }
             }
         } else if (msg->gbsmsg->msg == KEY_UP) {
-            BacklightOn(100);
-            GUI_StartTimerProc(data, data->timer_id, 1000, BacklightOff);
+            if (!IsMPOn() || !CFG_ENABLE_ILLUMINATION) {
+                TempLightOn(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 0x7FFF);
+            }
         }
     } else {
         return 1;
