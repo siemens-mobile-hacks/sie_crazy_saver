@@ -1,63 +1,58 @@
 #include <swilib.h>
 #include <string.h>
+#include <nu_swilib.h>
 #include <sie/sie.h>
-#include "csm.h"
 #include "gui.h"
 #include "config_loader.h"
 
 #define ELF_NAME "SieCrazySaver"
 
+typedef struct {
+    CSM_RAM csm;
+} MAIN_CSM;
+
 extern char CFG_PATH[];
 extern unsigned int CSM_ID;
 
-unsigned int SS_CSM_ID;
+SS_GUI SS;
+GUI_METHODS *METHODS_OLD;
+GUI_METHODS METHODS_NEW;
 unsigned int DAEMON_CSM_ID;
 
 const int minus11 =- 11;
 unsigned short maincsm_name_body[140];
 
-CSM_DESC *old_csmd;
-CSM_DESC new_csmd;
-//int (*(old_onmessage))(CSM_RAM *csm, GBS_MSG *msg);
-void (*(old_onclose))(CSM_RAM *csm);
-
-typedef struct {
-    CSM_RAM csm;
-    CSM_RAM *csm_ss;
-} MAIN_CSM;
-
-//int ss_csm_onmessage(CSM_RAM *csm, GBS_MSG *msg) {
-//    int result = old_onmessage(csm, msg);
-//    return result;
-//}
-//
-void ss_csm_onclose(CSM_RAM *csm) {
-    CloseCSM((int)CSM_ID);
-    old_onclose(csm);
-    old_csmd = NULL;
+void HookGUI(const SS_GUI *ss) {
+    int i = 0;
+    while (!IsGuiOnTop(ss->id)) {
+        if (i >= 3) {
+            return;
+        }
+        NU_Sleep(50);
+        i++;
+    };
+    memcpy(&SS, ss, sizeof(SS_GUI));
+    InitData();
+    LockSched();
+    memcpy(&METHODS_NEW, ss->gui->methods, sizeof(GUI_METHODS));
+    METHODS_OLD = ss->gui->methods;
+    METHODS_NEW.onRedraw = OnRedraw;
+    METHODS_NEW.onClose = OnClose;
+    METHODS_NEW.onFocus = OnFocus;
+    METHODS_NEW.onUnfocus = OnUnFocus;
+    METHODS_NEW.onKey = OnKey;
+    METHODS_NEW.onDestroy = OnDestroy;
+    ss->gui->methods = &METHODS_NEW;
+    UnlockSched();
+    DirectRedrawGUI_ID(ss->id);
 }
 
-static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
-    MAIN_CSM *csm = (MAIN_CSM*)data;
-    if (msg->msg == 0xA000) {
-        if (GetScreenSaverType() == SCREENSAVER_ENERGY_SAVER) {
-            SS_CSM_ID = msg->submess;
-            csm->csm_ss = FindCSMbyID((int)SS_CSM_ID);
-            if (csm->csm_ss) {
-                LockSched();
-                old_csmd = csm->csm_ss->constr;
-//            old_onmessage = csm_ss->constr->onMessage;
-                old_onclose = csm->csm_ss->constr->onClose;
-                memcpy(&new_csmd, old_csmd, sizeof(CSM_DESC));
-//            new_csmd.onMessage = ss_csm_onmessage;
-                new_csmd.onClose = ss_csm_onclose;
-                csm->csm_ss->constr = &new_csmd;
-                UnlockSched();
-                Sie_SubProc_Run(CreateCrazyCSM, NULL);
-            }
-        }
-    } else if (msg->msg == 0xA001) { // preview
-        Sie_SubProc_Run(CreateCrazyGUI, (void*)1);
+static int CSM_OnMessage(CSM_RAM *data, GBS_MSG *msg) {
+    if (msg->msg == 0x3FA) {
+        static SS_GUI ss;
+        ss.gui = msg->data0;
+        ss.id = msg->submess;
+        HookGUI(&ss);
     } else if (msg->msg == MSG_RECONFIGURE_REQ) {
         if (strcmpi(CFG_PATH, (char *)msg->data0) == 0) {
             InitConfig();
@@ -75,15 +70,13 @@ static int maincsm_onmessage(CSM_RAM *data, GBS_MSG *msg) {
     return 1;
 }
 
-static void maincsm_oncreate(CSM_RAM *data) {
+static void CSM_OnCreate(CSM_RAM *data) {
 }
 
-static void maincsm_onclose(CSM_RAM *data) {
-    MAIN_CSM *csm = (MAIN_CSM*)data;
-    if (old_csmd) {
-        csm->csm_ss->constr = old_csmd;
+static void CSM_OnClose(CSM_RAM *data) {
+    if (SS.id) {
+        GeneralFunc_flag1(SS.id, 1);
     }
-    CloseCSM((int)CSM_ID);
     SUBPROC((void *)kill_elf);
 }
 
@@ -92,15 +85,15 @@ static const struct {
     WSHDR maincsm_name;
 } MAINCSM = {
         {
-                maincsm_onmessage,
-                maincsm_oncreate,
+                CSM_OnMessage,
+                CSM_OnCreate,
 #ifdef NEWSGOLD
                 0,
                 0,
                 0,
                 0,
 #endif
-                maincsm_onclose,
+                CSM_OnClose,
                 sizeof(MAIN_CSM),
                 1,
                 &minus11
@@ -127,7 +120,7 @@ int main() {
     LockSched();
     save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
     CSM_root()->csm_q->current_msg_processing_csm = CSM_root()->csm_q->csm.first;
-    DAEMON_CSM_ID = CreateCSM(&MAINCSM.maincsm,dummy,0);
+    DAEMON_CSM_ID = CreateCSM(&MAINCSM.maincsm, dummy, 0);
     CSM_root()->csm_q->current_msg_processing_csm = save_cmpc;
     UnlockSched();
     // check double run
