@@ -10,7 +10,7 @@ __root CFG_HDR cfghdr_0 = {CFG_STR_WIN1251, "MP CSM addr", 1, 8};
         __root char CFG_MP_CSM_ADDR[9] = "A068ED54";
     #endif
 #else
-    __root char CFG_MP_CSM_ADDR[9] = "A0000000";
+    __root char CFG_MP_CSM_ADDR[9] = "A0A29E70";
 #endif
 
 __root CFG_HDR cfghdr_1 = {CFG_CHECKBOX, "Enable MP illumination", 0, 2};
