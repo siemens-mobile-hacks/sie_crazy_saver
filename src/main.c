@@ -40,11 +40,12 @@ void HookGUI(const SS_GUI *ss) {
     METHODS_NEW.onClose = OnClose;
     METHODS_NEW.onFocus = OnFocus;
     METHODS_NEW.onUnfocus = OnUnFocus;
-    METHODS_NEW.onKey = OnKey;
     METHODS_NEW.onDestroy = OnDestroy;
     ss->gui->methods = &METHODS_NEW;
+    Create(ss->gui);
+    Focus(ss->gui);
+    OnRedraw(ss->gui);
     UnlockSched();
-    DirectRedrawGUI_ID(ss->id);
 }
 
 static int CSM_OnMessage(CSM_RAM *data, GBS_MSG *msg) {
