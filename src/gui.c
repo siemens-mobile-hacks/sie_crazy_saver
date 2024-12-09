@@ -6,13 +6,10 @@
 #include "keyhook.h"
 
 typedef struct {
-    int preview;
-
     int timer_id;
     int redraw_timer_id;
     int illumination_timer_id;
     int illumination_flag;
-
     int color_bg_id;
     int color_text_id;
 } GUI_DATA;
@@ -28,7 +25,6 @@ GUI_DATA DATA;
 void InitData() {
     zeromem(&DATA, sizeof(GUI_DATA));
     DATA.color_bg_id = 1;
-    DATA.preview = *((unsigned int*)&(SS.gui->unk6)) == 0;
 }
 
 void DeleteTimers(void *gui) {
@@ -131,9 +127,6 @@ void OnRedraw(GUI *gui) {
 }
 
 void Create(GUI *gui) {
-    if (!DATA.preview) {
-        KbdLock();
-    }
     AddKeyHook();
 }
 
@@ -159,7 +152,7 @@ void Focus(GUI *gui) {
         DATA.color_bg_id = 1;
         DATA.color_text_id = 0;
     }
-    if (!DATA.preview || (IsMPOn() && CFG_ENABLE_ILLUMINATION)) {
+    if (IsMPOn() && CFG_ENABLE_ILLUMINATION) {
         IllumFilterSet(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 1);
     }
     GUI_StartTimerProc(gui, DATA.redraw_timer_id, 1000, Redraw_Proc);
