@@ -3,7 +3,7 @@
 #include <nu_swilib.h>
 #include <sie/sie.h>
 #include "gui.h"
-#include "config_loader.h"
+#include "config.h"
 
 #define ELF_NAME "SieCrazySaver"
 
@@ -11,7 +11,6 @@ typedef struct {
     CSM_RAM csm;
 } MAIN_CSM;
 
-extern char CFG_PATH[];
 extern unsigned int CSM_ID;
 
 SS_GUI SS;

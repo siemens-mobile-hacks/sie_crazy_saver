@@ -1,9 +1,9 @@
 #include <sie/sie.h>
 #include "mp.h"
+#include "config.h"
 
 CSM_RAM_MP *FindCSMMediaPlayer() {
-    extern char CFG_MP_CSM_ADDR[];
-    return (CSM_RAM_MP*)Sie_CSM_FindByAddr(CFG_MP_CSM_ADDR);
+    return (CSM_RAM_MP*)Sie_CSM_FindByAddr(CFG.mp_csm_addr);
 }
 
 unsigned int IsMPOn() {

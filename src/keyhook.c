@@ -1,7 +1,7 @@
 #include <swilib.h>
-#include <sie/sie.h>
 #include "mp.h"
 #include "gui.h"
+#include "config.h"
 
 extern int CFG_ENABLE_ILLUMINATION;
 extern SS_GUI SS;
@@ -10,7 +10,7 @@ int KeyHook(int submsg, int msg) {
     if (IsGuiOnTop(SS.id)) {
         if (!IsUnlocked()) {
             if (msg == KEY_DOWN) {
-                if (!IsMPOn() || !CFG_ENABLE_ILLUMINATION) {
+                if (!IsMPOn() || !CFG.enable_illumination) {
                     TempLightOn(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 0x7FFF);
                 }
                 if (submsg != '#') {

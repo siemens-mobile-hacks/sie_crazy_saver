@@ -3,6 +3,7 @@
 #include <sie/sie.h>
 #include "mp.h"
 #include "gui.h"
+#include "config.h"
 #include "keyhook.h"
 
 typedef struct {
@@ -14,8 +15,6 @@ typedef struct {
     int color_text_id;
 } GUI_DATA;
 
-extern int CFG_ENABLE_ILLUMINATION;
-extern int CFG_FONT_SIZE_CLOCK, CFG_FONT_SIZE_TRACK, CFG_FONT_SIZE_CLOCK2;
 extern SS_GUI SS;
 extern GUI_METHODS *METHODS_OLD;
 
@@ -56,7 +55,7 @@ void ChangeColors(void *gui) {
 }
 
 void IlluminationProc(void *gui) {
-    if (IsMPOn() && CFG_ENABLE_ILLUMINATION) {
+    if (IsMPOn() && CFG.enable_illumination) {
         if (DATA.illumination_flag == 0) {
             TempLightOn(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 0x7FFF);
             DATA.illumination_flag = 1;
@@ -70,7 +69,7 @@ void IlluminationProc(void *gui) {
 }
 
 void Redraw_Proc(void *gui) {
-    if (!IsMPOn() || !CFG_ENABLE_ILLUMINATION) {
+    if (!IsMPOn() || !CFG.enable_illumination) {
         DATA.color_bg_id = 1;
         DATA.color_text_id = 0;
         DirectRedrawGUI_ID(SS.id);
@@ -105,13 +104,13 @@ void OnRedraw(GUI *gui) {
         if (GetTrack(track, csm)) {
             unsigned int w;
             unsigned int h;
-            Sie_FT_GetStringSize(time_ws, CFG_FONT_SIZE_CLOCK2, &w, &h);
+            Sie_FT_GetStringSize(time_ws, CFG.font_size_clock2, &w, &h);
             Sie_FT_DrawText(track, 0, 0, ScreenW() - 1, ScreenH() - 1 - (int)h - 4,
-                            CFG_FONT_SIZE_TRACK,
+                            CFG.font_size_track,
                             SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
                             GetPaletteAdrByColorIndex((int)DATA.color_text_id));
             Sie_FT_DrawBoundingString(time_ws, 0, ScreenH() - 1 - (int)h, ScreenW() - 1, ScreenH() - 1,
-                                      CFG_FONT_SIZE_CLOCK2, SIE_FT_TEXT_ALIGN_CENTER,
+                                      CFG.font_size_clock2, SIE_FT_TEXT_ALIGN_CENTER,
                                       GetPaletteAdrByColorIndex((int)DATA.color_text_id));
             FreeWS(track);
         } else {
@@ -121,7 +120,7 @@ void OnRedraw(GUI *gui) {
     } else {
         DRAW_CLOCK:
             Sie_FT_DrawBoundingString(time_ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
-                CFG_FONT_SIZE_CLOCK, SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE, GetPaletteAdrByColorIndex((int)DATA.color_text_id));
+                CFG.font_size_clock, SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE, GetPaletteAdrByColorIndex((int)DATA.color_text_id));
     }
     FreeWS(time_ws);
 }
@@ -146,13 +145,13 @@ void Focus(GUI *gui) {
     DATA.timer_id = GUI_NewTimer(gui);
     DATA.redraw_timer_id = GUI_NewTimer(gui);
     DATA.illumination_timer_id = GUI_NewTimer(gui);
-    if (IsMPOn() && CFG_ENABLE_ILLUMINATION) {
+    if (IsMPOn() && CFG.enable_illumination) {
         GUI_StartTimerProc(gui, DATA.timer_id, 1000, ChangeColors);
     } else {
         DATA.color_bg_id = 1;
         DATA.color_text_id = 0;
     }
-    if (IsMPOn() && CFG_ENABLE_ILLUMINATION) {
+    if (IsMPOn() && CFG.enable_illumination) {
         IllumFilterSet(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 1);
     }
     GUI_StartTimerProc(gui, DATA.redraw_timer_id, 1000, Redraw_Proc);
