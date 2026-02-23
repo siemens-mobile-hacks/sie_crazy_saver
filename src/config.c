@@ -14,8 +14,10 @@ CONFIG CFG = {
     #else
         "A0A29E70",
     #endif
-    {CFG_CHECKBOX, "Enable MP illumination", 0, 2},
+    {CFG_LEVEL, "Illumination", 1, 0},
+    {CFG_CHECKBOX, "Enable", 0, 2},
     1,
+    {CFG_LEVEL, "", 0, 0},
     {CFG_UINT, "Font size clock", 0, 100},
     #ifdef ELKA
         100,
