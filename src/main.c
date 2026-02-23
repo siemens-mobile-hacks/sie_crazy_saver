@@ -41,10 +41,10 @@ void HookGUI(const SS_GUI *ss) {
     METHODS_NEW.onUnfocus = OnUnFocus;
     METHODS_NEW.onDestroy = OnDestroy;
     ss->gui->methods = &METHODS_NEW;
+    UnlockSched();
     Create(ss->gui);
     Focus(ss->gui);
     OnRedraw(ss->gui);
-    UnlockSched();
 }
 
 static int CSM_OnMessage(CSM_RAM *data, GBS_MSG *msg) {
@@ -54,12 +54,12 @@ static int CSM_OnMessage(CSM_RAM *data, GBS_MSG *msg) {
         ss.id = msg->submess;
         HookGUI(&ss);
     } else if (msg->msg == MSG_RECONFIGURE_REQ) {
-        if (strcmpi(CFG_PATH, (char *)msg->data0) == 0) {
+        if (strcmpi(CFG_PATH, msg->data0) == 0) {
             InitConfig();
             ShowMSG(1, (int)"SieCrazySaver config updated!");
         }
     } else if (msg->msg == MSG_IPC) {
-        IPC_REQ *ipc = (IPC_REQ*)msg->data0;
+        IPC_REQ *ipc = msg->data0;
         if (strcmpi(ipc->name_to, ELF_NAME) == 0) {
             int csm_id = (int)ipc->data;
             if (csm_id != DAEMON_CSM_ID) {
@@ -77,7 +77,7 @@ static void CSM_OnClose(CSM_RAM *data) {
     if (SS.id) {
         GeneralFunc_flag1(SS.id, 1);
     }
-    SUBPROC((void *)kill_elf);
+    SUBPROC(kill_elf);
 }
 
 static const struct {
@@ -113,12 +113,11 @@ static void UpdateCSMname(void) {
 }
 
 int main() {
-    CSM_RAM *save_cmpc;
     char dummy[sizeof(MAIN_CSM)];
     UpdateCSMname();
     InitConfig();
     LockSched();
-    save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
+    CSM_RAM *save_cmpc = CSM_root()->csm_q->current_msg_processing_csm;
     CSM_root()->csm_q->current_msg_processing_csm = CSM_root()->csm_q->csm.first;
     DAEMON_CSM_ID = CreateCSM(&MAINCSM.maincsm, dummy, 0);
     CSM_root()->csm_q->current_msg_processing_csm = save_cmpc;

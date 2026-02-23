@@ -6,6 +6,6 @@ typedef struct  {
     WSHDR *dir_ws;
 } CSM_RAM_MP;
 
-unsigned int IsMPOn();
+uint32_t IsMPOn();
 CSM_RAM_MP *FindCSMMediaPlayer();
 int GetTrack(WSHDR *track, CSM_RAM_MP *csm);

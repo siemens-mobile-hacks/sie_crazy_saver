@@ -6,7 +6,7 @@ CSM_RAM_MP *FindCSMMediaPlayer() {
     return (CSM_RAM_MP*)Sie_CSM_FindByAddr(CFG.mp_csm_addr);
 }
 
-unsigned int IsMPOn() {
+uint32_t IsMPOn() {
     return FindCSMMediaPlayer() ? 1 : 0;
 }
 
