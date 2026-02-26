@@ -2,12 +2,15 @@
 #include "mp.h"
 #include "config.h"
 
-CSM_RAM_MP *FindCSMMediaPlayer() {
-    return (CSM_RAM_MP*)Sie_CSM_FindByAddr(CFG.mp_csm_addr);
-}
-
-uint32_t IsMPOn() {
-    return FindCSMMediaPlayer() ? 1 : 0;
+CSM_RAM_MP *IsMPOn() {
+    const enum Accessory ims_700[] = {ACC_MOBILE_MUSIC_SET};
+    CSM_RAM_MP *csm = (CSM_RAM_MP*)Sie_CSM_FindByAddr(CFG.mp_csm_addr);
+    if (csm) {
+        if (CFG.detect_ims_700 && !IsAnyOfAccessoriesConnected(ims_700, 1)) {
+            csm = NULL;
+        }
+    }
+    return csm;
 }
 
 int GetTrack(WSHDR *track, CSM_RAM_MP *csm) {

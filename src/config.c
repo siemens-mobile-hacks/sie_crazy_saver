@@ -15,6 +15,8 @@ CONFIG CFG = {
     #else
         "A0A29E70",
     #endif
+    {CFG_CHECKBOX, "Detect IMS-700", 0, 2},
+    1,
     {CFG_LEVEL, "", 0, 0},
 
     {CFG_LEVEL, "Illumination", 1, 0},

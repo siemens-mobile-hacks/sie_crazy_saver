@@ -107,7 +107,7 @@ void OnRedraw(GUI *gui) {
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id),
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id));
 
-    CSM_RAM_MP *csm = FindCSMMediaPlayer();
+    CSM_RAM_MP *csm = IsMPOn();
     if (csm) {
         WSHDR *track = AllocWS(256);
         if (GetTrack(track, csm)) {

@@ -7,6 +7,8 @@ typedef struct {
     const CFG_HDR cfghdr_mp_b;
     const CFG_HDR cfghdr_mp_0;
     char mp_csm_addr[16];
+    const CFG_HDR cfghdr_mp_1;
+    int detect_ims_700;
     const CFG_HDR cfghdr_mp_e;
 
     const CFG_HDR cfghdr_i_b;
