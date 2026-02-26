@@ -4,22 +4,26 @@
 char CFG_PATH[] = "?:\\zbin\\etc\\SieCrazySaver.bcfg";
 
 CONFIG CFG = {
-    {CFG_STR_WIN1251, "MP CSM addr", 0, 15},
+    {CFG_LEVEL, "Media player", 1, 0},
+    {CFG_STR_WIN1251, "CSM addr", 0, 15},
     #ifdef NEWSGOLD
         #ifdef ELKA
             "A087109C",
         #else
-            "A068ED54",
+        "A068ED54",
         #endif
     #else
         "A0A29E70",
     #endif
+    {CFG_LEVEL, "", 0, 0},
+
     {CFG_LEVEL, "Illumination", 1, 0},
     {CFG_CHECKBOX, "Enable", 0, 2},
     1,
     {CFG_CHECKBOX, "Override brightness", 0, 2},
     1,
     {CFG_LEVEL, "", 0, 0},
+
     {CFG_UINT, "Font size clock", 0, 100},
     #ifdef ELKA
         100,
