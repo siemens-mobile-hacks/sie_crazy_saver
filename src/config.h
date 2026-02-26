@@ -10,6 +10,8 @@ typedef struct {
     const CFG_HDR cfghdr_i_b;
     const CFG_HDR cfghdr_i_0;
     int enable_illumination;
+    const CFG_HDR cfghdr_i_1;
+    int override_brightness;
     const CFG_HDR cfghdr_i_e;
 
     const CFG_HDR cfghdr_2;

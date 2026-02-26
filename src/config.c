@@ -17,6 +17,8 @@ CONFIG CFG = {
     {CFG_LEVEL, "Illumination", 1, 0},
     {CFG_CHECKBOX, "Enable", 0, 2},
     1,
+    {CFG_CHECKBOX, "Override brightness", 0, 2},
+    1,
     {CFG_LEVEL, "", 0, 0},
     {CFG_UINT, "Font size clock", 0, 100},
     #ifdef ELKA

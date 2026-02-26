@@ -11,6 +11,7 @@ typedef struct {
     int redraw_timer_id;
     int illumination_timer_id;
     int illumination_flag;
+    int brightness;
     int color_bg_id;
     int color_text_id;
 } GUI_DATA;
@@ -54,8 +55,14 @@ void ChangeColors(void *gui) {
     DirectRedrawGUI_ID(SS.id);
 }
 
+
 void IlluminationProc(void *gui) {
+    int brightness = DATA.brightness;
     if (IsMPOn() && CFG.enable_illumination) {
+        if (CFG.override_brightness) {
+            brightness = 100;
+        }
+        SetMaxIllumIntensity(3, brightness);
         if (DATA.illumination_flag == 0) {
             TempLightOn(SET_LIGHT_DISPLAY | SET_LIGHT_KEYBOARD, 0x7FFF);
             DATA.illumination_flag = 1;
@@ -64,6 +71,8 @@ void IlluminationProc(void *gui) {
             DATA.illumination_flag = 0;
             GUI_StartTimerProc(gui, DATA.timer_id, 1000, ChangeColors);
         }
+    } else {
+        SetMaxIllumIntensity(3, brightness);
     }
     GUI_StartTimerProc(gui, DATA.illumination_timer_id, 2000, IlluminationProc);
 }
@@ -145,6 +154,7 @@ void Focus(GUI *gui) {
     DATA.timer_id = GUI_NewTimer(gui);
     DATA.redraw_timer_id = GUI_NewTimer(gui);
     DATA.illumination_timer_id = GUI_NewTimer(gui);
+    DATA.brightness = RamScreenBrightness()->max_illum;
     if (IsMPOn() && CFG.enable_illumination) {
         GUI_StartTimerProc(gui, DATA.timer_id, 1000, ChangeColors);
     } else {
@@ -165,6 +175,7 @@ void OnFocus(GUI *gui, void *(*malloc_adr)(size_t), void (*mfree_adr)(void *)) {
 
 void OnUnFocus(GUI *gui, void (*mfree_adr)(void *)) {
     DeleteTimers(gui);
+    SetMaxIllumIntensity(3, DATA.brightness);
 #ifdef ELKA
     DisableIconBar(0);
 #endif
