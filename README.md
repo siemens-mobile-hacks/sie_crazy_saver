@@ -1,7 +1,22 @@
-Для нормальной работы требуется несколько патчей:
-1. [Using ELFs screensavers](https://patches.kibab.com/patches/search.php5?action=search&kw=Using+ELFs+screensavers)
-2. [Force update the data of a current audio track in ram](https://patches.kibab.com/patches/search.php5?action=search&kw=Force+update+the+data+of+a+current+audio+track+in+ram)
-3. [Not to hide mediaplayer at keylock to keyboard after roll up xtask'ом](https://patches.kibab.com/patches/search.php5?action=search&kw=Not+to+hide+mediaplayer+at+keylock+to+keyboard+after+roll+up+xtask%27%EE%EC)
-4. [Fade light off faster](https://patches.kibab.com/patches/search.php5?action=search&kw=Fade+light+off+faster)
+# SieCrazySaver – Additional ELF Screensaver for Siemens Mobile Phones
 
-Зависимости: [libsie.so](https://github.com/siemens-mobile-hacks/libsie)
+SieCrazySaver is a native ELF screensaver for Siemens mobile phones. It can display the current track name from the media player and supports illumination.
+
+## Building
+The SDK must be located at `../sdk` relative to the project root.
+```bash
+mkdir build && cd build
+cmake ..
+make
+```
+
+## Dependencies
+Before using SieCrazySaver, the following patches **must** be installed on your phone:
+
+1. [Using ELFs screensavers](https://patches.kibab.com/patches/search.php5?action=search&kw=Using+ELFs+screensavers)
+2. [Fade light off faster](https://patches.kibab.com/patches/search.php5?action=search&kw=Fade+light+off+faster)
+3. [**NSG**] [Not to hide mediaplayer at keylock to keyboard after roll up XTask](patches.kibab.com/patches/search.php5?action=search&kw=Not+to+hide+mediaplayer+at+keylock+to+keyboard+after+roll+up+XTask)
+
+## Screenshots
+![Default](screenshots/default.png)
+![MP](screenshots/mp.png)
