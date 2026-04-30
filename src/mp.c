@@ -18,7 +18,7 @@ CSM_RAM *FindCSMByConstr(CSM_RAM *csm, const void *constr) {
 }
 
 CSM_RAM *FindCSMByAddr(const char *addr) {
-    void *constr = (void*)strtoul(addr, NULL, 16);
+    const void *constr = (void*)strtoul(addr, NULL, 16);
     CSM_RAM *csm = FindCSMByConstr(CSM_root()->csm_q->csm.first, constr);
 #ifdef NEWSGOLD
     if (!csm) {
@@ -28,40 +28,41 @@ CSM_RAM *FindCSMByAddr(const char *addr) {
     return csm;
 }
 
-CSM_RAM_MP *IsMPOn() {
-    const enum Accessory ims_700[] = {ACC_MOBILE_MUSIC_SET};
-    CSM_RAM_MP *csm = (CSM_RAM_MP*)FindCSMByAddr(CFG.mp_csm_addr);
+MP_CSM *IsMPOn() {
+    MP_CSM *csm = (MP_CSM*)FindCSMByAddr(CFG.mp_csm_addr);
     if (csm) {
+#ifdef NEWSGOLD
+#ifndef ELKA
+        const enum Accessory ims_700[] = {ACC_MOBILE_MUSIC_SET};
         if (CFG.detect_ims_700 && !IsAnyOfAccessoriesConnected(ims_700, 1)) {
             csm = NULL;
         }
+#endif
+#endif
     }
     return csm;
 }
 
-int GetTrack(WSHDR *track, CSM_RAM_MP *csm) {
+int GetTrack(WSHDR *track, const MP_CSM *csm) {
     int result = 0;
 #ifdef NEWSGOLD
-    WSHDR *dir_ws = (WSHDR*)GetLastAudioTrackDir();
-    WSHDR *filename_ws = (WSHDR*)GetLastAudioTrackFilename();
-
     FILE_PROP file_prop = { 0 };
     file_prop.type = FILE_PROP_TYPE_MUSIC;
     file_prop.filename = AllocWS(256);
     file_prop.tag_title_ws = AllocWS(64);
     file_prop.tag_artist_ws = AllocWS(64);
 
-    wstrcpy(file_prop.filename, dir_ws);
+    wstrcpy(file_prop.filename, csm->dir_ws);
     if (wsCharAt(file_prop.filename, (short)wstrlen(file_prop.filename)) != '\\') {
         wsAppendChar(file_prop.filename, '\\');
     }
-    wstrcat(file_prop.filename, filename_ws);
+    wstrcat(file_prop.filename, csm->filename_ws);
 
-    if (GetFileProp(&file_prop, filename_ws, dir_ws)) {
+    if (GetFileProp(&file_prop, csm->filename_ws, csm->dir_ws)) {
         if (wstrlen(file_prop.tag_artist_ws) && wstrlen(file_prop.tag_title_ws)) {
             wsprintf(track, "%w - %w", file_prop.tag_artist_ws, file_prop.tag_title_ws);
         } else {
-            wstrcpy(track, filename_ws);
+            wstrcpy(track, csm->filename_ws);
         }
         result = 1;
     }

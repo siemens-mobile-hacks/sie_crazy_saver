@@ -1,5 +1,4 @@
 #include <swilib.h>
-#include <stdlib.h>
 #include "mp.h"
 #include "gui.h"
 #include "config.h"
@@ -162,7 +161,7 @@ void OnRedraw(GUI *gui) {
     DrawRectangle(0, 0, ScreenW() - 1, ScreenH() - 1, 0,
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id),
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id));
-    CSM_RAM_MP *csm = IsMPOn();
+    MP_CSM *csm = IsMPOn();
     if (csm) {
         WSHDR *track = AllocWS(256);
         if (GetTrack(track, csm)) {

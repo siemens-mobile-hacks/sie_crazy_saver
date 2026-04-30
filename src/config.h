@@ -7,8 +7,12 @@ typedef struct {
     const CFG_HDR cfghdr_mp_b;
     const CFG_HDR cfghdr_mp_0;
     char mp_csm_addr[16];
+#ifdef NEWSGOLD
+#ifndef ELKA
     const CFG_HDR cfghdr_mp_1;
     int detect_ims_700;
+#endif
+#endif
     const CFG_HDR cfghdr_mp_e;
 
     const CFG_HDR cfghdr_i_b;
@@ -17,15 +21,6 @@ typedef struct {
     const CFG_HDR cfghdr_i_1;
     int override_brightness;
     const CFG_HDR cfghdr_i_e;
-
-    const CFG_HDR cfghdr_2;
-    int font_size_clock;
-
-    const CFG_HDR cfghdr_3;
-    int font_size_track;
-
-    const CFG_HDR cfghdr_4;
-    int font_size_clock2;
 } CONFIG;
 #pragma pack(pop)
 

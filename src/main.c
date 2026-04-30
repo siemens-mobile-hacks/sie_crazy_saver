@@ -58,9 +58,9 @@ static int CSM_OnMessage(CSM_RAM *data, GBS_MSG *msg) {
             ShowMSG(1, (int)"SieCrazySaver config updated!");
         }
     } else if (msg->msg == MSG_IPC) {
-        IPC_REQ *ipc = msg->data0;
+        const IPC_REQ *ipc = msg->data0;
         if (strcmpi(ipc->name_to, ELF_NAME) == 0) {
-            int csm_id = (int)ipc->data;
+            const int csm_id = (int)ipc->data;
             if (csm_id != DAEMON_CSM_ID) {
                 CloseCSM(csm_id);
             }

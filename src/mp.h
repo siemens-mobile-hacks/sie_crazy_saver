@@ -2,9 +2,12 @@
 
 typedef struct  {
     CSM_RAM csm_ram;
+#ifdef NEWSGOLD
+    int unk;
+#endif
     WSHDR *filename_ws;
     WSHDR *dir_ws;
-} CSM_RAM_MP;
+} MP_CSM;
 
-CSM_RAM_MP *IsMPOn();
-int GetTrack(WSHDR *track, CSM_RAM_MP *csm);
+MP_CSM *IsMPOn();
+int GetTrack(WSHDR *track, const MP_CSM *csm);
