@@ -129,26 +129,26 @@ void DrawDigitalClock(const TTime *time) {
         }
     }
 
-    const int img_digit_0 = 616;
-    const int img_colon = img_digit_0 + 11;
-    const int digit_h = GetImgHeight(img_digit_0);
-    const int digit_w = GetImgWidth(img_digit_0);
+    const int icon_digit_0 = CFG.icon_digit_0;
+    const int icon_colon = icon_digit_0 + 11;
+    const int digit_h = GetImgHeight(icon_digit_0);
+    const int digit_w = GetImgWidth(icon_digit_0);
     const int digit_space = 10;
-    const int colon_w = GetImgWidth(img_colon);
+    const int colon_w = GetImgWidth(icon_colon);
     const int colon_space = 6;
     const int clock_w = digit_w * 4 + colon_w + colon_space * 2 + digit_space * 2;
 
     int x = (ScreenW() - clock_w) / 2;
     int y = (ScreenH() - digit_h) / 2;
-    DrawImg(x, y, img_digit_0 + (hour / 10));
+    DrawImg(x, y, icon_digit_0 + (hour / 10));
     x += digit_w + digit_space;
-    DrawImg(x, y, img_digit_0 + (hour % 10));
+    DrawImg(x, y, icon_digit_0 + (hour % 10));
     x += digit_w + colon_space;
-    DrawImg(x, y, img_colon);
+    DrawImg(x, y, icon_colon);
     x += colon_w + colon_space;
-    DrawImg(x, y, img_digit_0 + (time->min / 10));
+    DrawImg(x, y, icon_digit_0 + (time->min / 10));
     x += digit_w + digit_space;
-    DrawImg(x, y, img_digit_0 + (time->min % 10));
+    DrawImg(x, y, icon_digit_0 + (time->min % 10));
 }
 
 #define GetStringSize ((void (*)(WSHDR *, int text_flags, int flags, int font, int *w, int *h))(0xa08d32c4 | 1))

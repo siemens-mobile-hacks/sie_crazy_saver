@@ -4,6 +4,8 @@
 char CFG_PATH[] = "?:\\zbin\\etc\\SieCrazySaver.bcfg";
 
 CONFIG CFG = {
+    {CFG_UINT, "Digit 0 icon", 0, 2000},
+    616,
     {CFG_LEVEL, "Media player", 1, 0},
     {CFG_STR_WIN1251, "CSM addr", 0, 15},
     #ifdef NEWSGOLD

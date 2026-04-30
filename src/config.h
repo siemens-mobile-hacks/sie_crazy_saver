@@ -4,6 +4,8 @@
 
 #pragma pack(push, 1)
 typedef struct {
+    const CFG_HDR cfghdr_0;
+    int icon_digit_0;
     const CFG_HDR cfghdr_mp_b;
     const CFG_HDR cfghdr_mp_0;
     char mp_csm_addr[16];
