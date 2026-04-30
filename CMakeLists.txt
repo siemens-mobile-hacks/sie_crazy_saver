@@ -11,6 +11,7 @@ add_definitions(-DSWILIB_MODERN)
 add_executable(SieCrazySaver_ELKA ${SOURCES})
 target_sdk_setup(SieCrazySaver_ELKA ELKA)
 target_compile_options(SieCrazySaver_ELKA BEFORE PUBLIC -std=c11 -Wall -Werror)
+set_target_properties(SieCrazySaver_ELKA PROPERTIES OUTPUT_NAME "SieCrazySaver")
 
 add_executable(SieCrazySaver_NSG ${SOURCES})
 target_sdk_setup(SieCrazySaver_NSG NSG)
