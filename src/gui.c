@@ -103,8 +103,14 @@ void Redraw_Proc(void *gui) {
     GUI_StartTimerProc(gui, DATA.redraw_timer_id, 1000, Redraw_Proc);
 }
 
+WSHDR *GetDate(const TDate *date) {
+    WSHDR *ws = AllocWS(32);
+    GetDate_ws(ws, date, 0x7);
+    return ws;
+}
+
 WSHDR *GetTime(const TTime *time) {
-    unsigned int len = 0;
+    size_t len = 0;
     WSHDR *ws = AllocWS(32);
 
     GetTime_ws(ws, time, 0x223);
@@ -115,7 +121,7 @@ WSHDR *GetTime(const TTime *time) {
     return ws;
 }
 
-static void DrawClock(const TTime *time) {
+void DrawDigitalClock(const TTime *time) {
     int hour = time->hour;
     if (RamDateTimeSettings()->timeFormat == 1) { // 12
         hour = hour % 12;
@@ -150,8 +156,9 @@ static void DrawClock(const TTime *time) {
 
 void OnRedraw(GUI *gui) {
     METHODS_OLD->onRedraw(gui);
+    TDate date;
     TTime time;
-    GetDateTime(NULL, &time);
+    GetDateTime(&date, &time);
     DrawRectangle(0, 0, ScreenW() - 1, ScreenH() - 1, 0,
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id),
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id));
@@ -159,31 +166,46 @@ void OnRedraw(GUI *gui) {
     if (csm) {
         WSHDR *track = AllocWS(256);
         if (GetTrack(track, csm)) {
+            WSHDR *clock_ws = AllocWS(64);
+            WSHDR *date_ws = GetDate(&date);
             WSHDR *time_ws = GetTime(&time);
+            wsprintf(clock_ws, "%w %w", date_ws, time_ws);
+            FreeWS(time_ws);
+            FreeWS(date_ws);
+
             int font = FONT_MEDIUM;
-            const int time_w = Get_WS_width(time_ws, font);
-            const int time_h = GetFontYSIZE(font);
-            int x = (ScreenW() - 1 - time_w) / 2;
-            int y = (ScreenH() - 1 - time_h);
-            DrawString(time_ws, x, y, x + time_w, y + time_h, font, TEXT_ALIGNMIDDLE,
+            const int clock_w = Get_WS_width(clock_ws, font);
+            const int clock_h = GetFontYSIZE(font);
+            int x = (ScreenW() - 1 - clock_w) / 2;
+            int y = (ScreenH() - 1 - clock_h);
+            DrawString(clock_ws, x, y, x + clock_w, y + clock_h, font, TEXT_ALIGNMIDDLE,
                 GetPaletteAdrByColorIndex(DATA.color_text_id), GetPaletteAdrByColorIndex(0x17));
+            FreeWS(clock_ws);
 
             font = FONT_MEDIUM;
             int track_w = ScreenW() - 1;
-            int track_h = ScreenH() - 1 - time_h;
+            int track_h = ScreenH() - 1 - clock_h;
             Get_WS_extent(track, TEXT_ALIGNMIDDLE, 0, font, &track_w, &track_h);
             x = (ScreenW() - 1 - track_w) / 2;
             y = (ScreenH() - 1 - track_h) / 2;
             DrawString(track, x, y, x + track_w, y + track_h, font, TEXT_ALIGNMIDDLE,
                 GetPaletteAdrByColorIndex(DATA.color_text_id), GetPaletteAdrByColorIndex(0x17));
-            FreeWS(time_ws);
+            FreeWS(track);
         } else {
             FreeWS(track);
-            DrawClock(&time);
+            goto DRAW_CLOCK;
         }
-        FreeWS(track);
     } else {
-        DrawClock(&time);
+        DRAW_CLOCK:
+            DrawDigitalClock(&time);
+            WSHDR *date_ws = GetDate(&date);
+            int font = FONT_MEDIUM;
+            const int x = 0;
+            const int y = ScreenH() - 1 - GetFontYSIZE(font);
+            const int x2 = ScreenW() - 1;
+            const int y2 = ScreenH() - 1;
+            DrawString(date_ws, x, y, x2, y2, font, TEXT_ALIGNMIDDLE,
+                GetPaletteAdrByColorIndex(DATA.color_text_id), GetPaletteAdrByColorIndex(0x17));
     }
 }
 
