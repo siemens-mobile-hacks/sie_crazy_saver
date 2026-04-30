@@ -1,6 +1,5 @@
 #include <swilib.h>
 #include <stdlib.h>
-#include <sie/sie.h>
 #include "mp.h"
 #include "gui.h"
 #include "config.h"
@@ -104,13 +103,11 @@ void Redraw_Proc(void *gui) {
     GUI_StartTimerProc(gui, DATA.redraw_timer_id, 1000, Redraw_Proc);
 }
 
-WSHDR *GetTime() {
-    TTime time;
+WSHDR *GetTime(const TTime *time) {
     unsigned int len = 0;
     WSHDR *ws = AllocWS(32);
 
-    GetDateTime(NULL, &time);
-    GetTime_ws(ws, &time, 0x223);
+    GetTime_ws(ws, time, 0x223);
     len = wstrlen(ws);
     if (len > 5) { // cut am, pm
         wsRemoveChars(ws, 5 + 1, (int)len);
@@ -118,38 +115,76 @@ WSHDR *GetTime() {
     return ws;
 }
 
+static void DrawClock(const TTime *time) {
+    int hour = time->hour;
+    if (RamDateTimeSettings()->timeFormat == 1) { // 12
+        hour = hour % 12;
+        if (hour == 0) {
+            hour = 12;
+        }
+    }
+
+    const int img_digit_0 = 616;
+    const int img_colon = img_digit_0 + 11;
+    const int digit_h = GetImgHeight(img_digit_0);
+    const int digit_w = GetImgWidth(img_digit_0);
+    const int digit_space = 10;
+    const int colon_w = GetImgWidth(img_colon);
+    const int colon_space = 6;
+    const int clock_w = digit_w * 4 + colon_w + colon_space * 2 + digit_space * 2;
+
+    int x = (ScreenW() - clock_w) / 2;
+    int y = (ScreenH() - digit_h) / 2;
+    DrawImg(x, y, img_digit_0 + (hour / 10));
+    x += digit_w + digit_space;
+    DrawImg(x, y, img_digit_0 + (hour % 10));
+    x += digit_w + colon_space;
+    DrawImg(x, y, img_colon);
+    x += colon_w + colon_space;
+    DrawImg(x, y, img_digit_0 + (time->min / 10));
+    x += digit_w + digit_space;
+    DrawImg(x, y, img_digit_0 + (time->min % 10));
+}
+
+#define GetStringSize ((void (*)(WSHDR *, int text_flags, int flags, int font, int *w, int *h))(0xa08d32c4 | 1))
+
 void OnRedraw(GUI *gui) {
     METHODS_OLD->onRedraw(gui);
-    WSHDR *time_ws = GetTime();
+    TTime time;
+    GetDateTime(NULL, &time);
     DrawRectangle(0, 0, ScreenW() - 1, ScreenH() - 1, 0,
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id),
                   GetPaletteAdrByColorIndex((int)DATA.color_bg_id));
-
     CSM_RAM_MP *csm = IsMPOn();
     if (csm) {
         WSHDR *track = AllocWS(256);
         if (GetTrack(track, csm)) {
-            unsigned int w;
-            unsigned int h;
-            Sie_FT_GetStringSize(time_ws, CFG.font_size_clock2, &w, &h);
-            Sie_FT_DrawText(track, 0, 0, ScreenW() - 1, ScreenH() - 1 - (int)h - 4,
-                            CFG.font_size_track,
-                            SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE,
-                            GetPaletteAdrByColorIndex((int)DATA.color_text_id));
-            Sie_FT_DrawBoundingString(time_ws, 0, ScreenH() - 1 - (int)h, ScreenW() - 1, ScreenH() - 1,
-                                      CFG.font_size_clock2, SIE_FT_TEXT_ALIGN_CENTER,
-                                      GetPaletteAdrByColorIndex((int)DATA.color_text_id));
-            FreeWS(track);
+            WSHDR *time_ws = GetTime(&time);
+            int font = FONT_MEDIUM;
+            const int time_w = Get_WS_width(time_ws, font);
+            const int time_h = GetFontYSIZE(font);
+            int x = (ScreenW() - 1 - time_w) / 2;
+            int y = (ScreenH() - 1 - time_h);
+            DrawString(time_ws, x, y, x + time_w, y + time_h, font, TEXT_ALIGNMIDDLE,
+                GetPaletteAdrByColorIndex(DATA.color_text_id), GetPaletteAdrByColorIndex(0x17));
+
+            font = FONT_MEDIUM;
+            int track_w = ScreenW() - 1;
+            int track_h = ScreenH() - 1 - time_h;
+            Get_WS_extent(track, TEXT_ALIGNMIDDLE, 0, font, &track_w, &track_h);
+            x = (ScreenW() - 1 - track_w) / 2;
+            y = (ScreenH() - 1 - track_h) / 2;
+            DrawString(track, x, y, x + track_w, y + track_h, font, TEXT_ALIGNMIDDLE,
+                GetPaletteAdrByColorIndex(DATA.color_text_id), GetPaletteAdrByColorIndex(0x17));
+            FreeWS(time_ws);
         } else {
             FreeWS(track);
-            goto DRAW_CLOCK;
+            DrawClock(&time);
         }
+        FreeWS(track);
     } else {
-        DRAW_CLOCK:
-            Sie_FT_DrawBoundingString(time_ws, 0, 0, ScreenW() - 1, ScreenH() - 1,
-                CFG.font_size_clock, SIE_FT_TEXT_ALIGN_CENTER | SIE_FT_TEXT_VALIGN_MIDDLE, GetPaletteAdrByColorIndex((int)DATA.color_text_id));
+        DrawClock(&time);
     }
-    FreeWS(time_ws);
 }
 
 void Create(GUI *gui) {

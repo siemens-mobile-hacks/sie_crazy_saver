@@ -25,25 +25,6 @@ CONFIG CFG = {
     {CFG_CHECKBOX, "Override brightness", 0, 2},
     1,
     {CFG_LEVEL, "", 0, 0},
-
-    {CFG_UINT, "Font size clock", 0, 100},
-    #ifdef ELKA
-        100,
-    #else
-        52,
-    #endif
-    {CFG_UINT, "Font size track", 0, 100},
-    #ifdef ELKA
-        28,
-    #else
-        18,
-    #endif
-    {CFG_UINT, "Font size clock 2", 0, 100},
-    #ifdef ELKA
-        32,
-    #else
-        22,
-    #endif
 };
 
 void InitConfig() {

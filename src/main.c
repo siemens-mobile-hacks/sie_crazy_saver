@@ -1,7 +1,6 @@
 #include <swilib.h>
 #include <string.h>
 #include <nu_swilib.h>
-#include <sie/sie.h>
 #include "gui.h"
 #include "config.h"
 

@@ -1,10 +1,36 @@
-#include <sie/sie.h>
+#include <swilib.h>
+#include <stdlib.h>
 #include "mp.h"
 #include "config.h"
 
+CSM_RAM *FindCSMByConstr(CSM_RAM *csm, const void *constr) {
+    CSM_RAM *csm_ram = NULL;
+    LockSched();
+    while (csm) {
+        if (csm->constr == constr) {
+            csm_ram = csm;
+            break;
+        }
+        csm = csm->next;
+    }
+    UnlockSched();
+    return csm_ram;
+}
+
+CSM_RAM *FindCSMByAddr(const char *addr) {
+    void *constr = (void*)strtoul(addr, NULL, 16);
+    CSM_RAM *csm = FindCSMByConstr(CSM_root()->csm_q->csm.first, constr);
+#ifdef NEWSGOLD
+    if (!csm) {
+        csm = FindCSMByConstr(CSM_root()->csm_q->csm_background.first, constr);
+    }
+#endif
+    return csm;
+}
+
 CSM_RAM_MP *IsMPOn() {
     const enum Accessory ims_700[] = {ACC_MOBILE_MUSIC_SET};
-    CSM_RAM_MP *csm = (CSM_RAM_MP*)Sie_CSM_FindByAddr(CFG.mp_csm_addr);
+    CSM_RAM_MP *csm = (CSM_RAM_MP*)FindCSMByAddr(CFG.mp_csm_addr);
     if (csm) {
         if (CFG.detect_ims_700 && !IsAnyOfAccessoriesConnected(ims_700, 1)) {
             csm = NULL;
