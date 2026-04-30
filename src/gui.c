@@ -4,6 +4,14 @@
 #include "config.h"
 #include "keyhook.h"
 
+#ifdef ELKA
+    #define DIGIT_SPACE 10
+    #define COLON_SPACE 6
+#else
+    #define DIGIT_SPACE 5
+    #define COLON_SPACE 4
+#endif
+
 typedef struct {
     int timer_id;
     int redraw_timer_id;
@@ -120,6 +128,16 @@ WSHDR *GetTime(const TTime *time) {
     return ws;
 }
 
+void DrawDigit(int x, int y, int picture) {
+#ifdef NEWSGOLD
+#ifndef ELKA
+    DrawImgBW(x, y, picture, GetPaletteAdrByColorIndex(0), GetPaletteAdrByColorIndex(1));
+#else
+    DrawImg(x, y, picture);
+#endif
+#endif
+}
+
 void DrawDigitalClock(const TTime *time) {
     int hour = time->hour;
     if (RamDateTimeSettings()->timeFormat == 1) { // 12
@@ -133,25 +151,23 @@ void DrawDigitalClock(const TTime *time) {
     const int icon_colon = icon_digit_0 + 11;
     const int digit_h = GetImgHeight(icon_digit_0);
     const int digit_w = GetImgWidth(icon_digit_0);
-    const int digit_space = 10;
+    const int digit_space = DIGIT_SPACE;
     const int colon_w = GetImgWidth(icon_colon);
-    const int colon_space = 6;
+    const int colon_space = COLON_SPACE;
     const int clock_w = digit_w * 4 + colon_w + colon_space * 2 + digit_space * 2;
 
     int x = (ScreenW() - clock_w) / 2;
     int y = (ScreenH() - digit_h) / 2;
-    DrawImg(x, y, icon_digit_0 + (hour / 10));
+    DrawDigit(x, y, icon_digit_0 + (hour / 10));
     x += digit_w + digit_space;
-    DrawImg(x, y, icon_digit_0 + (hour % 10));
+    DrawDigit(x, y, icon_digit_0 + (hour % 10));
     x += digit_w + colon_space;
-    DrawImg(x, y, icon_colon);
+    DrawDigit(x, y, icon_colon);
     x += colon_w + colon_space;
-    DrawImg(x, y, icon_digit_0 + (time->min / 10));
+    DrawDigit(x, y, icon_digit_0 + (time->min / 10));
     x += digit_w + digit_space;
-    DrawImg(x, y, icon_digit_0 + (time->min % 10));
+    DrawDigit(x, y, icon_digit_0 + (time->min % 10));
 }
-
-#define GetStringSize ((void (*)(WSHDR *, int text_flags, int flags, int font, int *w, int *h))(0xa08d32c4 | 1))
 
 void OnRedraw(GUI *gui) {
     METHODS_OLD->onRedraw(gui);
@@ -205,6 +221,7 @@ void OnRedraw(GUI *gui) {
             const int y2 = ScreenH() - 1;
             DrawString(date_ws, x, y, x2, y2, font, TEXT_ALIGNMIDDLE,
                 GetPaletteAdrByColorIndex(DATA.color_text_id), GetPaletteAdrByColorIndex(0x17));
+            FreeWS(date_ws);
     }
 }
 

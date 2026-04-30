@@ -3,7 +3,6 @@
 #include "gui.h"
 #include "config.h"
 
-extern int CFG_ENABLE_ILLUMINATION;
 extern SS_GUI SS;
 
 int KeyHook(int submsg, int msg) {
