@@ -15,7 +15,7 @@ Before using SieCrazySaver, the following patches **must** be installed on your 
 
 1. [Using ELFs screensavers](https://patches.kibab.com/patches/search.php5?action=search&kw=Using+ELFs+screensavers)
 2. [Fade light off faster](https://patches.kibab.com/patches/search.php5?action=search&kw=Fade+light+off+faster)
-3. [**NSG**] [Not to hide mediaplayer at keylock to keyboard after roll up XTask](patches.kibab.com/patches/search.php5?action=search&kw=Not+to+hide+mediaplayer+at+keylock+to+keyboard+after+roll+up+XTask)
+3. [**NSG**] [Not to hide mediaplayer at keylock to keyboard after roll up XTask](https://patches.kibab.com/patches/search.php5?action=search&kw=Not+to+hide+mediaplayer+at+keylock+to+keyboard+after+roll+up+XTask)
 
 ## Screenshots
 ![Default](screenshots/default.png)
