@@ -128,7 +128,18 @@ WSHDR *GetTime(const TTime *time) {
     return ws;
 }
 
-void DrawDigit(int x, int y, int picture) {
+int GetHour(const TTime *time) {
+    int hour = time->hour;
+    if (RamDateTimeSettings()->timeFormat == 1) { // 12
+        hour = hour % 12;
+        if (hour == 0) {
+            hour = 12;
+        }
+    }
+    return hour;
+}
+
+void DrawBuiltInDigit(int x, int y, int picture) {
 #ifdef NEWSGOLD
 #ifndef ELKA
     DrawImgBW(x, y, picture, GetPaletteAdrByColorIndex(0), GetPaletteAdrByColorIndex(1));
@@ -138,35 +149,60 @@ void DrawDigit(int x, int y, int picture) {
 #endif
 }
 
-void DrawDigitalClock(const TTime *time) {
-    int hour = time->hour;
-    if (RamDateTimeSettings()->timeFormat == 1) { // 12
-        hour = hour % 12;
-        if (hour == 0) {
-            hour = 12;
-        }
-    }
+void DrawBuiltInDigitalClock(const TTime *time) {
+    const int hour = GetHour(time);
 
-    const int icon_digit_0 = CFG.icon_digit_0;
-    const int icon_colon = icon_digit_0 + 11;
-    const int digit_h = GetImgHeight(icon_digit_0);
-    const int digit_w = GetImgWidth(icon_digit_0);
+    const int icon_0 = CFG.built_in_digital_icon_0;
+    const int icon_colon = icon_0 + 11;
+    const int digit_h = GetImgHeight(icon_0);
+    const int digit_w = GetImgWidth(icon_0);
     const int digit_space = DIGIT_SPACE;
     const int colon_w = GetImgWidth(icon_colon);
     const int colon_space = COLON_SPACE;
     const int clock_w = digit_w * 4 + colon_w + colon_space * 2 + digit_space * 2;
 
     int x = (ScreenW() - clock_w) / 2;
-    int y = (ScreenH() - digit_h) / 2;
-    DrawDigit(x, y, icon_digit_0 + (hour / 10));
+    const int y = (ScreenH() - digit_h) / 2;
+    DrawBuiltInDigit(x, y, icon_0 + (hour / 10));
     x += digit_w + digit_space;
-    DrawDigit(x, y, icon_digit_0 + (hour % 10));
+    DrawBuiltInDigit(x, y, icon_0 + (hour % 10));
     x += digit_w + colon_space;
-    DrawDigit(x, y, icon_colon);
+    DrawBuiltInDigit(x, y, icon_colon);
     x += colon_w + colon_space;
-    DrawDigit(x, y, icon_digit_0 + (time->min / 10));
+    DrawBuiltInDigit(x, y, icon_0 + (time->min / 10));
     x += digit_w + digit_space;
-    DrawDigit(x, y, icon_digit_0 + (time->min % 10));
+    DrawBuiltInDigit(x, y, icon_0 + (time->min % 10));
+}
+
+void DrawCustomDigits(const IMGHDR *digits, int x, int y, int tens, int units) {
+    const int digit_h = digits->h / 10;
+    DrawCroppedIMGHDR(x, y, 0, tens * digit_h, digits->w, digit_h, 0, digits);
+    x += digits->w;
+    DrawCroppedIMGHDR(x, y, 0, units * digit_h, digits->w, digit_h, 0, digits);
+}
+
+void DrawCustomDigitalClock(const TTime *time) {
+    const IMGHDR *digits = GetPITaddr((int)CFG.png_digital_digits_path);
+    const IMGHDR *digit_bg = GetPITaddr((int)CFG.png_digital_digit_bg_path);
+    if (digits && digit_bg) {
+        const int hour = GetHour(time);
+
+        const int digits_bg_w = digit_bg->w * 2;
+        const int digits_bg_h = digit_bg->h;
+        const int hours_bg_x = (ScreenW() - digits_bg_w) / 2 + CFG.png_digital_offset_x;
+        const int hours_bg_y = (ScreenH() - digits_bg_h) / 2;
+        const int minutes_bg_x = hours_bg_x + digit_bg->w;
+        const int minutes_bg_y = hours_bg_y;
+        DrawIMGHDR(hours_bg_x, hours_bg_y, digit_bg);
+        DrawIMGHDR(minutes_bg_x, minutes_bg_y, digit_bg);
+
+        const int digits_offset_x = 1;
+        const int digits_offset_y = 13;
+        DrawCustomDigits(digits, hours_bg_x + digits_offset_x, hours_bg_y + digits_offset_y,
+            hour / 10, hour % 10);
+        DrawCustomDigits(digits, minutes_bg_x + digits_offset_x, minutes_bg_y + digits_offset_y,
+            time->min / 10, time->min % 10);
+    }
 }
 
 void OnRedraw(GUI *gui) {
@@ -212,9 +248,13 @@ void OnRedraw(GUI *gui) {
         }
     } else {
         DRAW_CLOCK:
-            DrawDigitalClock(&time);
+            if (CFG.clock_type == CFG_CLOCK_TYPE_BUILT_IN_DIGITAL) {
+                DrawBuiltInDigitalClock(&time);
+            } else if (CFG.clock_type == CFG_CLOCK_TYPE_PNG_DIGITAL) {
+                DrawCustomDigitalClock(&time);
+            }
             WSHDR *date_ws = GetDate(&date);
-            int font = FONT_MEDIUM;
+            const int font = FONT_MEDIUM;
             const int x = 0;
             const int y = ScreenH() - 1 - GetFontYSIZE(font);
             const int x2 = ScreenW() - 1;

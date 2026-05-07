@@ -17,6 +17,10 @@ Before using SieCrazySaver, the following patches **must** be installed on your 
 2. [Fade light off faster](https://patches.kibab.com/patches/search.php5?action=search&kw=Fade+light+off+faster)
 3. [**NSG**] [Not to hide mediaplayer at keylock to keyboard after roll up XTask](https://patches.kibab.com/patches/search.php5?action=search&kw=Not+to+hide+mediaplayer+at+keylock+to+keyboard+after+roll+up+XTask)
 
+Additionally, for the **PNG digital clock** you need:
+- Copy `digits.png` and `digit_bg.png` from the `img` folder to `0:\zbin\img\SieCrazySaver\` on your phone.
+
 ## Screenshots
-![Default](screenshots/default.png)
+![Built-In digital clock](screenshots/built_in_digital_clock.png)
+![PNG digital clock](screenshots/png_digital_clock.png)
 ![MP](screenshots/mp.png)
