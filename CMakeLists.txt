@@ -1,22 +1,24 @@
-cmake_minimum_required(VERSION 3.28.2)
+cmake_minimum_required(VERSION 3.31)
 
 include(../sdk/config.cmake)
 project(sieelf_crazy_saver C)
 
-link_libraries(crt crt_helper c gcc)
-file(GLOB_RECURSE SOURCES "src/*.c")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/*.c")
 
-add_definitions(-DSWILIB_MODERN)
+function(add_target target platform)
+    add_executable(${target} ${SOURCES})
+    target_sdk_setup(${target} ${platform})
+    target_link_libraries(${target} PRIVATE crt crt_helper c gcc)
+    target_compile_definitions(${target} PRIVATE SWILIB_MODERN)
+    target_compile_options(${target} PRIVATE -Wall -Werror)
+    set_target_properties(${target} PROPERTIES
+            C_STANDARD 11
+            C_STANDARD_REQUIRED ON
+            C_EXTENSIONS OFF
+            OUTPUT_NAME "SieCrazySaver_${platform}"
+    )
+endfunction()
 
-add_executable(SieCrazySaver_ELKA ${SOURCES})
-target_sdk_setup(SieCrazySaver_ELKA ELKA)
-target_compile_options(SieCrazySaver_ELKA BEFORE PUBLIC -std=c11 -Wall -Werror)
-set_target_properties(SieCrazySaver_ELKA PROPERTIES OUTPUT_NAME "SieCrazySaver")
-
-add_executable(SieCrazySaver_NSG ${SOURCES})
-target_sdk_setup(SieCrazySaver_NSG NSG)
-target_compile_options(SieCrazySaver_NSG BEFORE PUBLIC -std=c11 -Wall -Werror)
-
-add_executable(SieCrazySaver_SG ${SOURCES})
-target_sdk_setup(SieCrazySaver_SG SG)
-target_compile_options(SieCrazySaver_SG BEFORE PUBLIC -std=c11 -Wall -Werror)
+add_target(SieCrazySaver_ELKA ELKA)
+add_target(SieCrazySaver_NSG NSG)
+add_target(SieCrazySaver_SG SG)
